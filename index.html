@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bubble Pop Party!</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  overflow: hidden;
+  background: linear-gradient(180deg, #1a0533 0%, #2d1b69 30%, #4a2c8a 60%, #6b3fa0 100%);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  height: 100vh;
+  width: 100vw;
+}
+canvas { display: block; }
+#ui {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  z-index: 10;
+  pointer-events: none;
+}
+#score {
+  font-size: 32px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255,200,50,0.8), 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 2px;
+}
+#combo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 0 15px rgba(255,215,0,0.6);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#combo.show { opacity: 1; }
+#level {
+  font-size: 22px;
+  font-weight: 700;
+  color: #a0e0ff;
+  text-shadow: 0 0 15px rgba(100,180,255,0.5);
+}
+#start-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: linear-gradient(180deg, #0a001a 0%, #1a0533 30%, #2d1b69 70%, #4a2c8a 100%);
+}
+#start-screen h1 {
+  font-size: 64px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff6b9d, #ffd93d, #6bcb77, #4d96ff, #ff6b9d);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient 3s ease infinite;
+  text-align: center;
+  line-height: 1.2;
+}
+@keyframes gradient {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+#start-screen .subtitle {
+  font-size: 28px;
+  color: #b088d0;
+  margin: 15px 0 40px;
+  text-align: center;
+}
+#start-btn {
+  font-size: 36px;
+  font-weight: 800;
+  padding: 18px 60px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #ff6b9d, #ff8e53);
+  color: white;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 8px 30px rgba(255,107,157,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: pulse 2s ease-in-out infinite;
+}
+#start-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 40px rgba(255,107,157,0.6);
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.emoji-row {
+  font-size: 50px;
+  margin-bottom: 20px;
+  animation: bounce 1.5s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+#game-over {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: rgba(10,0,26,0.92);
+  backdrop-filter: blur(10px);
+}
+#game-over h2 {
+  font-size: 52px;
+  font-weight: 900;
+  color: #ffd93d;
+  text-shadow: 0 0 30px rgba(255,217,61,0.5);
+}
+#game-over .final-score {
+  font-size: 72px;
+  font-weight: 900;
+  color: #fff;
+  margin: 10px 0;
+}
+#game-over .stats {
+  font-size: 22px;
+  color: #b088d0;
+  margin-bottom: 30px;
+}
+#restart-btn {
+  font-size: 30px;
+  font-weight: 800;
+  padding: 15px 50px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #6bcb77, #4d96ff);
+  color: white;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 8px 30px rgba(107,203,119,0.4);
+  transition: transform 0.2s;
+}
+#restart-btn:hover { transform: scale(1.08); }
+.star-burst {
+  position: fixed;
+  pointer-events: none;
+  z-index: 50;
+  font-size: 40px;
+  animation: starPop 0.8s ease-out forwards;
+}
+@keyframes starPop {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+.float-text {
+  position: fixed;
+  pointer-events: none;
+  z-index: 50;
+  font-size: 28px;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255,215,0,0.8);
+  animation: floatUp 1s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+  <div class="emoji-row">🫧 🎈 🌟 🎉 🫧</div>
+  <h1>Bubble Pop<br>Party!</h1>
+  <div class="subtitle">Pop the bubbles before they escape!</div>
+  <button id="start-btn">PLAY!</button>
+</div>
+
+<div id="ui">
+  <div id="score">0</div>
+  <div id="combo"></div>
+  <div id="level">Level 1</div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div id="game-over">
+  <h2>Amazing Job!</h2>
+  <div class="final-score" id="final-score">0</div>
+  <div class="stats" id="final-stats"></div>
+  <button id="restart-btn">Play Again!</button>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const levelEl = document.getElementById('level');
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over');
+const finalScoreEl = document.getElementById('final-score');
+const finalStatsEl = document.getElementById('final-stats');
+
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Game state
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+let level = 1;
+let totalPopped = 0;
+let lives = 5;
+let gameRunning = false;
+let bubbles = [];
+let particles = [];
+let stars = [];
+let spawnTimer = 0;
+let difficultyTimer = 0;
+let bgStars = [];
+
+// Background stars
+for (let i = 0; i < 80; i++) {
+  bgStars.push({
+    x: Math.random() * 2000,
+    y: Math.random() * 2000,
+    r: Math.random() * 2 + 0.5,
+    twinkle: Math.random() * Math.PI * 2,
+    speed: Math.random() * 0.02 + 0.01
+  });
+}
+
+const COLORS = [
+  { fill: '#ff6b9d', glow: 'rgba(255,107,157,0.4)', emoji: '🩷' },
+  { fill: '#ffd93d', glow: 'rgba(255,217,61,0.4)', emoji: '⭐' },
+  { fill: '#6bcb77', glow: 'rgba(107,203,119,0.4)', emoji: '💚' },
+  { fill: '#4d96ff', glow: 'rgba(77,150,255,0.4)', emoji: '💙' },
+  { fill: '#ff8e53', glow: 'rgba(255,142,83,0.4)', emoji: '🧡' },
+  { fill: '#c77dff', glow: 'rgba(199,125,255,0.4)', emoji: '💜' },
+  { fill: '#38bdf8', glow: 'rgba(56,189,248,0.4)', emoji: '🩵' },
+  { fill: '#fb7185', glow: 'rgba(251,113,133,0.4)', emoji: '❤️' },
+];
+
+const SPECIAL_TYPES = [
+  { name: 'rainbow', emoji: '🌈', points: 50, chance: 0.05 },
+  { name: 'star', emoji: '🌟', points: 30, chance: 0.08 },
+  { name: 'heart', emoji: '💖', points: 20, chance: 0.1 },
+];
+
+class Bubble {
+  constructor() {
+    this.r = Math.random() * 30 + 25;
+    this.x = Math.random() * (W - this.r * 2) + this.r;
+    this.y = H + this.r;
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = -(Math.random() * 1.5 + 1 + level * 0.15);
+    this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    this.wobble = Math.random() * Math.PI * 2;
+    this.wobbleSpeed = Math.random() * 0.04 + 0.02;
+    this.wobbleAmp = Math.random() * 1.5 + 0.5;
+    this.alive = true;
+    this.popping = false;
+    this.popFrame = 0;
+    this.special = null;
+
+    // Check for special bubble
+    let roll = Math.random();
+    let cumulative = 0;
+    for (const s of SPECIAL_TYPES) {
+      cumulative += s.chance;
+      if (roll < cumulative) {
+        this.special = s;
+        this.r += 10;
+        break;
+      }
+    }
+  }
+
+  update() {
+    if (this.popping) {
+      this.popFrame++;
+      return this.popFrame > 15;
+    }
+    this.wobble += this.wobbleSpeed;
+    this.x += this.vx + Math.sin(this.wobble) * this.wobbleAmp;
+    this.y += this.vy;
+
+    // Bounce off walls
+    if (this.x < this.r) { this.x = this.r; this.vx *= -1; }
+    if (this.x > W - this.r) { this.x = W - this.r; this.vx *= -1; }
+
+    // Escaped off top
+    if (this.y < -this.r * 2) {
+      this.alive = false;
+      return true;
+    }
+    return false;
+  }
+
+  draw() {
+    if (this.popping) {
+      const progress = this.popFrame / 15;
+      const scale = 1 + progress * 0.5;
+      ctx.globalAlpha = 1 - progress;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * scale, 0, Math.PI * 2);
+      ctx.fillStyle = this.color.fill;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      return;
+    }
+
+    // Glow
+    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 1.5);
+    gradient.addColorStop(0, this.color.glow);
+    gradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(this.x - this.r * 1.5, this.y - this.r * 1.5, this.r * 3, this.r * 3);
+
+    // Bubble body
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    const bodyGrad = ctx.createRadialGradient(
+      this.x - this.r * 0.3, this.y - this.r * 0.3, 0,
+      this.x, this.y, this.r
+    );
+    bodyGrad.addColorStop(0, '#ffffff');
+    bodyGrad.addColorStop(0.3, this.color.fill);
+    bodyGrad.addColorStop(1, this.color.fill + '88');
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+
+    // Shine
+    ctx.beginPath();
+    ctx.arc(this.x - this.r * 0.25, this.y - this.r * 0.25, this.r * 0.2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fill();
+
+    // Emoji or special
+    if (this.special) {
+      ctx.font = `${this.r}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(this.special.emoji, this.x, this.y);
+    }
+  }
+
+  contains(px, py) {
+    const dx = px - this.x;
+    const dy = py - this.y;
+    return dx * dx + dy * dy <= this.r * this.r;
+  }
+
+  pop() {
+    this.popping = true;
+    this.popFrame = 0;
+  }
+}
+
+class Particle {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * 12;
+    this.vy = (Math.random() - 0.5) * 12;
+    this.r = Math.random() * 6 + 2;
+    this.color = color;
+    this.life = 1;
+    this.decay = Math.random() * 0.03 + 0.02;
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.15;
+    this.life -= this.decay;
+    return this.life <= 0;
+  }
+
+  draw() {
+    ctx.globalAlpha = this.life;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function spawnBubble() {
+  bubbles.push(new Bubble());
+}
+
+function popEffect(x, y, color, points) {
+  // Particles
+  for (let i = 0; i < 12; i++) {
+    particles.push(new Particle(x, y, color.fill));
+  }
+
+  // Floating text
+  const ft = document.createElement('div');
+  ft.className = 'float-text';
+  ft.textContent = `+${points}`;
+  ft.style.left = x + 'px';
+  ft.style.top = y + 'px';
+  document.body.appendChild(ft);
+  setTimeout(() => ft.remove(), 1000);
+
+  // Star burst for combos
+  if (combo >= 3) {
+    const sb = document.createElement('div');
+    sb.className = 'star-burst';
+    sb.textContent = combo >= 10 ? '🔥' : combo >= 5 ? '⚡' : '✨';
+    sb.style.left = (x - 20) + 'px';
+    sb.style.top = (y - 20) + 'px';
+    document.body.appendChild(sb);
+    setTimeout(() => sb.remove(), 800);
+  }
+}
+
+function handleClick(x, y) {
+  if (!gameRunning) return;
+
+  let hit = false;
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    if (!b.popping && b.contains(x, y)) {
+      b.pop();
+      hit = true;
+      combo++;
+      totalPopped++;
+      if (combo > maxCombo) maxCombo = combo;
+
+      let points = 10;
+      if (b.special) points = b.special.points;
+      const comboMultiplier = Math.min(combo, 20);
+      points = Math.floor(points * (1 + comboMultiplier * 0.1));
+
+      score += points;
+      scoreEl.textContent = score;
+
+      if (combo >= 2) {
+        comboEl.textContent = `${combo}x COMBO!`;
+        comboEl.classList.add('show');
+      }
+
+      popEffect(b.x, b.y, b.color, points);
+      break;
+    }
+  }
+
+  if (!hit) {
+    combo = 0;
+    comboEl.classList.remove('show');
+  }
+}
+
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  handleClick(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  for (const t of e.touches) {
+    handleClick(t.clientX, t.clientY);
+  }
+}, { passive: false });
+
+function drawBackground() {
+  // Sky gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0a001a');
+  grad.addColorStop(0.3, '#1a0533');
+  grad.addColorStop(0.6, '#2d1b69');
+  grad.addColorStop(1, '#4a2c8a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  const time = Date.now() * 0.001;
+  for (const s of bgStars) {
+    const alpha = 0.3 + Math.sin(time * s.speed * 50 + s.twinkle) * 0.3;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(s.x % W, s.y % H, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawLives() {
+  const heartSize = 28;
+  const padding = 25;
+  const startX = W - padding - (heartSize + 8) * lives;
+  for (let i = 0; i < lives; i++) {
+    ctx.font = `${heartSize}px serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('❤️', startX + i * (heartSize + 8) + heartSize / 2, 75);
+  }
+  // Draw empty hearts for lost lives
+  for (let i = lives; i < 5; i++) {
+    ctx.font = `${heartSize}px serif`;
+    ctx.globalAlpha = 0.3;
+    ctx.fillText('🖤', startX + i * (heartSize + 8) + heartSize / 2, 75);
+    ctx.globalAlpha = 1;
+  }
+}
+
+let lastTime = 0;
+function gameLoop(time) {
+  if (!gameRunning) return;
+  const dt = Math.min(time - lastTime, 50);
+  lastTime = time;
+
+  drawBackground();
+
+  // Spawn bubbles
+  spawnTimer += dt;
+  const spawnInterval = Math.max(400, 1200 - level * 80);
+  if (spawnTimer > spawnInterval) {
+    spawnTimer = 0;
+    spawnBubble();
+    // Extra bubble at higher levels
+    if (level >= 3 && Math.random() < 0.3) spawnBubble();
+    if (level >= 5 && Math.random() < 0.2) spawnBubble();
+  }
+
+  // Difficulty scaling
+  difficultyTimer += dt;
+  if (difficultyTimer > 15000) {
+    difficultyTimer = 0;
+    level++;
+    levelEl.textContent = `Level ${level}`;
+    // Bonus life every 3 levels
+    if (level % 3 === 0 && lives < 5) {
+      lives++;
+    }
+  }
+
+  // Update & draw bubbles
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const shouldRemove = bubbles[i].update();
+    bubbles[i].draw();
+    if (shouldRemove) {
+      if (bubbles[i].alive === false) {
+        // Escaped = lose a life
+        lives--;
+        combo = 0;
+        comboEl.classList.remove('show');
+        if (lives <= 0) {
+          endGame();
+          return;
+        }
+      }
+      bubbles.splice(i, 1);
+    }
+  }
+
+  // Update & draw particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    if (particles[i].update()) {
+      particles.splice(i, 1);
+    } else {
+      particles[i].draw();
+    }
+  }
+
+  drawLives();
+
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  level = 1;
+  totalPopped = 0;
+  lives = 5;
+  bubbles = [];
+  particles = [];
+  spawnTimer = 0;
+  difficultyTimer = 0;
+  gameRunning = true;
+
+  scoreEl.textContent = '0';
+  levelEl.textContent = 'Level 1';
+  comboEl.classList.remove('show');
+  startScreen.style.display = 'none';
+  gameOverScreen.style.display = 'none';
+
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+  gameRunning = false;
+  finalScoreEl.textContent = score;
+  finalStatsEl.innerHTML = `
+    Bubbles popped: ${totalPopped} &nbsp;|&nbsp; Best combo: ${maxCombo}x &nbsp;|&nbsp; Level: ${level}
+  `;
+  gameOverScreen.style.display = 'flex';
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('restart-btn').addEventListener('click', startGame);
+
+// Animate background on start screen
+function animateStartBg() {
+  if (gameRunning) return;
+  drawBackground();
+  requestAnimationFrame(animateStartBg);
+}
+animateStartBg();
+</script>
+</body>
+</html>
