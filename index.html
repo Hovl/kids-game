@@ -112,6 +112,26 @@ canvas { display: block; }
 }
 #restart-btn:hover { transform: scale(1.08); }
 
+/* Exit button */
+#exit-btn {
+  position: fixed; top: 12px; right: 15px; z-index: 15;
+  font-size: 14px; font-weight: 700; padding: 8px 18px;
+  border: 2px solid rgba(255,255,255,0.3); border-radius: 25px;
+  background: rgba(255,255,255,0.1); color: #fff;
+  cursor: pointer; pointer-events: auto;
+  backdrop-filter: blur(5px); transition: all 0.2s;
+  display: none;
+}
+#exit-btn:hover { background: rgba(255,100,100,0.3); border-color: #ff6b6b; }
+
+/* View Results button */
+#view-results-btn {
+  font-size: 20px; font-weight: 700; padding: 12px 35px; border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50px; background: rgba(255,255,255,0.1); color: #fff;
+  cursor: pointer; pointer-events: auto; transition: all 0.2s; margin-bottom: 15px;
+}
+#view-results-btn:hover { background: rgba(255,255,255,0.2); }
+
 /* Floating effects */
 .float-text {
   position: fixed; pointer-events: none; z-index: 50;
@@ -200,8 +220,11 @@ canvas { display: block; }
   <div class="final-score" id="go-score">0</div>
   <div class="stats" id="go-stats"></div>
   <div class="learned" id="go-learned"></div>
+  <button id="view-results-btn">View My Results</button>
   <button id="restart-btn">Play Again!</button>
 </div>
+
+<button id="exit-btn">✕ Exit</button>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -284,6 +307,39 @@ let swimObstacles = [];
 
 // Load best scores
 try { const s = localStorage.getItem('dubov_best'); if (s) bestScores = JSON.parse(s); } catch(e) {}
+
+// Pop sound via Web Audio API
+let audioCtx = null;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+function playPop(pitch) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(pitch || 600, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.15);
+}
+function playComboSound(comboLevel) {
+  if (!audioCtx) return;
+  const baseFreq = 400 + comboLevel * 80;
+  for (let i = 0; i < 3; i++) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq + i * 150, audioCtx.currentTime + i * 0.05);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.05 + 0.1);
+    osc.start(audioCtx.currentTime + i * 0.05);
+    osc.stop(audioCtx.currentTime + i * 0.05 + 0.1);
+  }
+}
 
 for (let i = 0; i < 100; i++) {
   bgStars.push({ x: Math.random() * 2000, y: Math.random() * 2000, r: Math.random() * 2 + 0.5, twinkle: Math.random() * Math.PI * 2 });
@@ -531,6 +587,8 @@ function handleClick(x, y) {
       score += points;
 
       popEffect(b.x, b.y, b.color, points);
+      playPop(500 + combo * 40);
+      if (combo >= 3) playComboSound(combo);
       updateHUD();
       break;
     }
@@ -655,6 +713,7 @@ function gameLoop(time) {
 }
 
 function startGame() {
+  initAudio();
   const char = CHARACTERS[selectedChar];
   score = 0; combo = 0; maxCombo = 0; level = 1; totalPopped = 0; lives = 5;
   bubbles = []; particles = []; spawnTimer = 0; difficultyTimer = 0;
@@ -664,6 +723,7 @@ function startGame() {
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('game-over').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
+  document.getElementById('exit-btn').style.display = 'block';
   document.getElementById('mode-label').textContent =
     selectedMode === 'russian' ? 'Pop Russian letters to learn the alphabet!' :
     selectedMode === 'swim' ? 'Swim and collect treasures! Avoid sea creatures!' :
@@ -676,6 +736,7 @@ function startGame() {
 
 function endGame() {
   gameRunning = false;
+  document.getElementById('exit-btn').style.display = 'none';
   if (score > bestScores[selectedMode]) {
     bestScores[selectedMode] = score;
     try { localStorage.setItem('dubov_best', JSON.stringify(bestScores)); } catch(e) {}
@@ -701,6 +762,36 @@ function endGame() {
 
 document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
+
+// Exit button - go back to start screen
+document.getElementById('exit-btn').addEventListener('click', () => {
+  gameRunning = false;
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('exit-btn').style.display = 'none';
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'flex';
+  animateStart();
+});
+
+// View Results button - show detailed results
+document.getElementById('view-results-btn').addEventListener('click', () => {
+  const char = CHARACTERS[selectedChar];
+  let resultText = `${char.name}'s Results:\n\n`;
+  resultText += `Score: ${score}\n`;
+  resultText += `Level: ${level}\n`;
+  resultText += `Bubbles popped: ${totalPopped}\n`;
+  resultText += `Best combo: ${maxCombo}x\n`;
+  resultText += `Best score ever: ${bestScores[selectedMode]}\n`;
+  if (selectedMode === 'swim') resultText += `Distance: ${Math.floor(swimDistance)}m\n`;
+  if (selectedMode === 'russian' && lettersLearned.size > 0) {
+    resultText += `\nRussian letters learned (${lettersLearned.size}/${RUSSIAN_LETTERS.length}):\n`;
+    resultText += [...lettersLearned].sort().join(' ');
+  }
+  if (score >= bestScores[selectedMode] && score > 0) {
+    resultText += `\n\nNEW RECORD!`;
+  }
+  alert(resultText);
+});
 
 // Animate start screen background
 function animateStart() {
