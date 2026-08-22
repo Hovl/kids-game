@@ -487,18 +487,11 @@ function showLetterPopup(letterData) {
 function speakRussian(letter, word) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
-  // First say the letter
-  const letterUtter = new SpeechSynthesisUtterance(letter);
-  letterUtter.lang = 'ru-RU';
-  letterUtter.rate = 0.8;
-  letterUtter.pitch = 1.1;
-  // Then say the word
+  // Speak the word only (avoids "заглавная буква" prefix on single letters)
   const wordUtter = new SpeechSynthesisUtterance(word);
   wordUtter.lang = 'ru-RU';
   wordUtter.rate = 0.75;
   wordUtter.pitch = 1.1;
-  wordUtter.onstart = () => {};
-  window.speechSynthesis.speak(letterUtter);
   window.speechSynthesis.speak(wordUtter);
 }
 
