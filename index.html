@@ -480,6 +480,26 @@ function showLetterPopup(letterData) {
   lp.style.left = '50%'; lp.style.top = '40%'; lp.style.transform = 'translate(-50%, -50%)';
   document.body.appendChild(lp);
   setTimeout(() => lp.remove(), 1500);
+  // Speak the Russian word
+  speakRussian(letterData.letter, letterData.word);
+}
+
+function speakRussian(letter, word) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  // First say the letter
+  const letterUtter = new SpeechSynthesisUtterance(letter);
+  letterUtter.lang = 'ru-RU';
+  letterUtter.rate = 0.8;
+  letterUtter.pitch = 1.1;
+  // Then say the word
+  const wordUtter = new SpeechSynthesisUtterance(word);
+  wordUtter.lang = 'ru-RU';
+  wordUtter.rate = 0.75;
+  wordUtter.pitch = 1.1;
+  wordUtter.onstart = () => {};
+  window.speechSynthesis.speak(letterUtter);
+  window.speechSynthesis.speak(wordUtter);
 }
 
 function handleClick(x, y) {
@@ -510,16 +530,12 @@ function handleClick(x, y) {
       if (selectedMode === 'russian' && b.content) {
         points = 15;
         lettersLearned.add(b.content.letter);
-        if (lettersLearned.size % 5 === 0) showLetterPopup(b.content);
+        showLetterPopup(b.content);
       }
       if (selectedMode === 'swim') points = 12;
 
       points = Math.floor(points * (1 + Math.min(combo, 20) * 0.1));
       score += points;
-
-      if (selectedMode === 'russian' && b.content && lettersLearned.size <= 5) {
-        showLetterPopup(b.content);
-      }
 
       popEffect(b.x, b.y, b.color, points);
       updateHUD();
