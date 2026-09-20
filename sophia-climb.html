@@ -17,7 +17,7 @@ body {
   background: #1a1a4e;
   touch-action: manipulation;
 }
-canvas { display: block; }
+canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
 
 #start-screen {
   position: fixed; inset: 0;
@@ -61,30 +61,24 @@ canvas { display: block; }
   padding: 10px 15px; z-index: 10; pointer-events: none;
 }
 #hud .prompt {
-  font-size: 24px; font-weight: 900; color: #fff;
+  font-size: 22px; font-weight: 900; color: #fff;
   text-shadow: 0 0 20px rgba(255,255,255,0.5);
   text-align: center; margin-bottom: 5px;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.5);
   padding: 8px 20px;
   border-radius: 20px;
 }
 #hud .stats {
   display: flex; gap: 30px; margin-top: 5px;
 }
-#hud .stat {
-  text-align: center;
-}
-#hud .stat-label {
-  font-size: 12px; color: #aaa;
-}
-#hud .stat-value {
-  font-size: 20px; font-weight: 700; color: #ffd700;
-}
+#hud .stat { text-align: center; }
+#hud .stat-label { font-size: 12px; color: #aaa; }
+#hud .stat-value { font-size: 20px; font-weight: 700; color: #ffd700; }
 
 /* Feedback */
 #feedback {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  font-size: 56px; font-weight: 900; color: #ffd700;
+  position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 48px; font-weight: 900; color: #ffd700;
   text-shadow: 0 0 40px rgba(255,215,0,0.8);
   z-index: 50; pointer-events: none;
   opacity: 0; transition: opacity 0.3s;
@@ -92,39 +86,89 @@ canvas { display: block; }
 #feedback.show { opacity: 1; animation: feedbackPop 0.8s ease-out; }
 @keyframes feedbackPop {
   0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1 }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 0 }
+  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
 }
 
-/* Challenge overlay */
-#challenge {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.95); border: 3px solid #ffd700;
-  border-radius: 20px; padding: 25px; z-index: 60;
-  display: none; flex-direction: column; align-items: center;
-  min-width: 320px; max-width: 90vw;
+/* Challenge overlay - FULL SCREEN for mobile */
+#challenge-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
-#challenge .question {
-  font-size: 24px; font-weight: 900; color: #fff;
-  margin-bottom: 20px; text-align: center;
-  line-height: 1.4;
+#challenge-overlay.active {
+  display: flex;
 }
-#challenge .hint {
-  font-size: 14px; color: #aaa; margin-bottom: 15px; text-align: center;
-}
-#challenge .options {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%;
-}
-#challenge .option {
-  font-size: 22px; font-weight: 700; padding: 15px 20px;
-  border: 2px solid rgba(255,255,255,0.3); border-radius: 15px;
-  background: rgba(255,255,255,0.1); color: #fff;
-  cursor: pointer; pointer-events: auto; transition: all 0.2s;
+
+#challenge-box {
+  background: linear-gradient(180deg, #1a1a3e, #0a0a2e);
+  border: 3px solid #ffd700;
+  border-radius: 25px;
+  padding: 25px 20px;
+  width: 100%;
+  max-width: 360px;
   text-align: center;
 }
-#challenge .option:hover { background: rgba(255,255,255,0.2); }
-#challenge .option.correct { background: #22cc22; color: #000; border-color: #22cc22; }
-#challenge .option.wrong { background: #cc2222; color: #fff; border-color: #cc2222; }
+
+#challenge-question {
+  font-size: 24px; font-weight: 900; color: #fff;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#challenge-hint {
+  font-size: 16px; color: #aaa;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+#challenge-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.option-btn {
+  font-size: 28px; font-weight: 800;
+  padding: 18px 10px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.option-btn:active {
+  transform: scale(0.95);
+}
+.option-btn.correct {
+  background: #22cc44;
+  border-color: #22cc44;
+  color: #000;
+}
+.option-btn.wrong {
+  background: #cc2222;
+  border-color: #cc2222;
+  color: #fff;
+  animation: shake 0.3s ease;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
 
 /* Level complete */
 #level-complete {
@@ -197,10 +241,13 @@ canvas { display: block; }
 
 <div id="feedback"></div>
 
-<div id="challenge">
-  <div class="question" id="challenge-question"></div>
-  <div class="hint" id="challenge-hint"></div>
-  <div class="options" id="challenge-options"></div>
+<!-- Challenge overlay - covers entire screen -->
+<div id="challenge-overlay">
+  <div id="challenge-box">
+    <div id="challenge-question"></div>
+    <div id="challenge-hint"></div>
+    <div id="challenge-options"></div>
+  </div>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -208,7 +255,7 @@ canvas { display: block; }
 <div id="level-complete">
   <h2 id="lc-title">LEVEL COMPLETE!</h2>
   <div class="stars" id="lc-stars">⭐⭐⭐</div>
-  <div class="stats" id="lc-stats">Height: 100m | Score: 500</div>
+  <div class="stats" id="lc-stats"></div>
   <button id="next-btn">NEXT LEVEL</button>
 </div>
 
@@ -242,197 +289,184 @@ let challengeActive = false;
 let currentPlatformIndex = -1;
 let streak = 0;
 
-// Harder pattern sequences - need to identify the RULE, not just guess
+// ============ CHALLENGE GENERATORS ============
+
 function generatePattern(difficulty) {
-  const patterns = [
-    // Alternating patterns (easy)
-    { seq: ['🔴', '🔵', '🔴', '🔵', '🔴'], rule: 'alternate', next: '🔵', hint: 'Colors alternate' },
-    { seq: ['⭐', '❤️', '⭐', '❤️', '⭐'], rule: 'alternate', next: '❤️', hint: 'Shapes alternate' },
-    
-    // AAB patterns
-    { seq: ['🔴', '🔴', '🔵', '🔴', '🔴'], rule: 'aab', next: '🔵', hint: 'Two, then one' },
-    { seq: ['🟢', '🟢', '🟡', '🟢', '🟢'], rule: 'aab', next: '🟡', hint: 'Two, then one' },
-    
-    // ABC patterns
-    { seq: ['🔴', '🔵', '🟡', '🔴', '🔵'], rule: 'abc', next: '🟡', hint: 'Three colors repeat' },
-    { seq: ['⭐', '❤️', '🔵', '⭐', '❤️'], rule: 'abc', next: '🔵', hint: 'Three shapes repeat' },
-    
-    // Growing patterns
-    { seq: ['🔴', '🔴', '🔵', '🔴', '🔴', '🔵', '🔴'], rule: 'growing', next: '🔴', hint: 'Pattern grows' },
-    
-    // Reversed patterns
-    { seq: ['🔴', '🔵', '🟡', '🟡', '🔵'], rule: 'mirror', next: '🔴', hint: 'It mirrors!' },
+  const allPatterns = [
+    { seq: ['🔴','🔵','🔴','🔵','🔴'], answer: '🔵', hint: 'Colors alternate' },
+    { seq: ['🟢','🟡','🟢','🟡','🟢'], answer: '🟡', hint: 'Two colors switch' },
+    { seq: ['🔴','🔴','🔵','🔴','🔴'], answer: '🔵', hint: 'Two red, one blue' },
+    { seq: ['🟢','🟢','🟡','🟢','🟢'], answer: '🟡', hint: 'Two green, one yellow' },
+    { seq: ['🔴','🔵','🟡','🔴','🔵'], answer: '🟡', hint: 'Three colors repeat' },
+    { seq: ['⭐','❤️','🔵','⭐','❤️'], answer: '🔵', hint: 'Three shapes repeat' },
+    { seq: ['🔴','🔵','🔵','🔴','🔵','🔵','🔴'], answer: '🔵', hint: 'One, then two' },
+    { seq: ['🟡','🟡','🔴','🟡','🟡','🔴','🟡'], answer: '🟡', hint: 'Two, then one' },
+    { seq: ['🟢','🔵','🔵','🟢','🔵','🔵','🟢'], answer: '🔵', hint: 'Watch the pattern' },
+    { seq: ['🔴','🟡','🔴','🔴','🟡','🔴','🔴'], answer: '🟡', hint: 'It grows!' },
+    { seq: ['🔵','🟢','🟢','🔵','🟢','🟢','🔵'], answer: '🟢', hint: 'One blue, two green' },
+    { seq: ['🔴','🔴','🟡','🟡','🔵','🔵','🔴'], answer: '🔴', hint: 'Doubles' },
   ];
   
-  // Filter by difficulty
-  let available = patterns;
-  if (difficulty <= 2) available = patterns.filter(p => p.rule === 'alternate');
-  else if (difficulty <= 4) available = patterns.filter(p => ['alternate', 'aab'].includes(p.rule));
+  let pool = allPatterns;
+  if (difficulty <= 2) pool = allPatterns.filter(p => p.hint.includes('alternate') || p.hint.includes('switch'));
+  else if (difficulty <= 4) pool = allPatterns.filter(p => !p.hint.includes('Doubles'));
   
-  const pattern = available[Math.floor(Math.random() * available.length)];
+  const pattern = pool[Math.floor(Math.random() * pool.length)];
   
-  // Generate 4 options including the correct one
-  const allEmojis = ['🔴', '🔵', '🟢', '🟡', '🟣', '🟠'];
-  const options = [pattern.next];
-  while (options.length < 4) {
-    const opt = allEmojis[Math.floor(Math.random() * allEmojis.length)];
-    if (!options.includes(opt)) options.push(opt);
+  const allColors = ['🔴','🔵','🟢','🟡','🟣','🟠'];
+  const opts = [pattern.answer];
+  while (opts.length < 4) {
+    const c = allColors[Math.floor(Math.random() * allColors.length)];
+    if (!opts.includes(c)) opts.push(c);
   }
-  options.sort(() => Math.random() - 0.5);
+  shuffle(opts);
   
-  return {
-    question: `What comes next?\n${pattern.seq.join(' ')}`,
-    hint: pattern.hint,
-    answer: pattern.next,
-    options
-  };
+  return { question: pattern.seq.join(' '), hint: pattern.hint, answer: pattern.answer, options: opts };
 }
 
-// Math - actual problem solving required
 function generateMath(difficulty) {
   let question, answer, hint;
   
   if (difficulty <= 2) {
-    // Simple addition
-    const a = Math.floor(Math.random() * 8) + 2;
-    const b = Math.floor(Math.random() * 8) + 2;
+    const a = randInt(2, 9);
+    const b = randInt(2, 9);
     question = `${a} + ${b} = ?`;
     answer = a + b;
-    hint = 'Add the numbers';
+    hint = 'Add them together';
   } else if (difficulty <= 4) {
-    // Addition and subtraction
     const type = Math.random();
-    if (type < 0.4) {
-      const a = Math.floor(Math.random() * 15) + 5;
-      const b = Math.floor(Math.random() * 10) + 1;
+    if (type < 0.5) {
+      const a = randInt(10, 20);
+      const b = randInt(1, 9);
       question = `${a} + ${b} = ?`;
       answer = a + b;
-      hint = 'Add the numbers';
-    } else if (type < 0.7) {
-      let a = Math.floor(Math.random() * 15) + 5;
-      const b = Math.floor(Math.random() * a) + 1;
+      hint = 'Add them';
+    } else {
+      let a = randInt(8, 20);
+      const b = randInt(2, a - 1);
       question = `${a} - ${b} = ?`;
       answer = a - b;
-      hint = 'Subtract the smaller from the larger';
-    } else {
-      // Two-step: a + b - c
-      const a = Math.floor(Math.random() * 10) + 5;
-      const b = Math.floor(Math.random() * 5) + 1;
-      const c = Math.floor(Math.random() * 5) + 1;
+      hint = 'Subtract';
+    }
+  } else {
+    const type = Math.random();
+    if (type < 0.4) {
+      const a = randInt(2, 6);
+      const b = randInt(2, 6);
+      question = `${a} × ${b} = ?`;
+      answer = a * b;
+      hint = 'Multiply';
+    } else if (type < 0.7) {
+      const a = randInt(5, 15);
+      const b = randInt(2, 8);
+      const c = randInt(1, 5);
       question = `${a} + ${b} - ${c} = ?`;
       answer = a + b - c;
       hint = 'Solve left to right';
-    }
-  } else {
-    // Harder: multiplication, two-step
-    const type = Math.random();
-    if (type < 0.4) {
-      const a = Math.floor(Math.random() * 5) + 2;
-      const b = Math.floor(Math.random() * 5) + 2;
-      question = `${a} × ${b} = ?`;
-      answer = a * b;
-      hint = 'Multiply the numbers';
-    } else if (type < 0.7) {
-      const a = Math.floor(Math.random() * 10) + 5;
-      const b = Math.floor(Math.random() * 5) + 2;
-      const c = Math.floor(Math.random() * 5) + 1;
-      question = `${a} + ${b} × ${c} = ?`;
-      // Remember order of operations? No, for 7yo just left to right
-      answer = (a + b) * c; // Parentheses make it easier
-      question = `(${a} + ${b}) × ${c} = ?`;
-      hint = 'Add first, then multiply';
     } else {
-      // Word problem
-      const apples = Math.floor(Math.random() * 8) + 3;
-      const give = Math.floor(Math.random() * apples) + 1;
-      question = `You have ${apples} apples.\nYou give away ${give}.\nHow many left?`;
+      const apples = randInt(8, 20);
+      const give = randInt(2, apples - 2);
+      question = `🍎 You have ${apples}\ngive away ${give}\nHow many left?`;
       answer = apples - give;
-      hint = 'Subtract the ones you gave away';
+      hint = 'Subtract the ones you gave';
     }
   }
   
-  // Generate 4 wrong answers that are close to correct
-  const wrongAnswers = new Set();
-  const offsets = [-2, -1, 1, 2, 3, -3];
-  let offsetIdx = 0;
-  while (wrongAnswers.size < 3) {
-    const wrong = answer + offsets[offsetIdx % offsets.length];
-    offsetIdx++;
-    if (wrong !== answer && wrong > 0 && wrong < 100) wrongAnswers.add(wrong);
-  }
-  
-  const options = [answer, ...wrongAnswers].sort(() => Math.random() - 0.5);
-  return { question, hint, answer: answer.toString(), options: options.map(o => o.toString()) };
+  const opts = generateNumberOptions(answer, 4);
+  return { question, hint, answer: String(answer), options: opts.map(String) };
 }
 
-// Word challenges - spelling and vocabulary
 function generateWord(difficulty) {
   const words = [
-    // 3-letter words (easy)
-    { word: 'CAT', display: 'C _ T', answer: 'A', options: ['A', 'E', 'I', 'O'], hint: 'A pet that says meow' },
-    { word: 'DOG', display: 'D _ G', answer: 'O', options: ['O', 'A', 'U', 'I'], hint: 'A pet that barks' },
-    { word: 'SUN', display: 'S _ N', answer: 'U', options: ['U', 'A', 'O', 'I'], hint: 'Shines in the sky' },
-    { word: 'HAT', display: 'H _ T', answer: 'A', options: ['A', 'E', 'I', 'O'], hint: 'You wear it on your head' },
-    { word: 'BIG', display: 'B _ G', answer: 'I', options: ['I', 'E', 'A', 'O'], hint: 'Not small' },
-    
-    // 4-letter words (medium)
-    { word: 'FISH', display: 'F _ S H', answer: 'I', options: ['I', 'E', 'A', 'O'], hint: 'Lives in water' },
-    { word: 'BIRD', display: 'B _ R D', answer: 'I', options: ['I', 'E', 'A', 'U'], hint: 'It can fly' },
-    { word: 'STAR', display: 'S _ A R', answer: 'T', options: ['T', 'D', 'P', 'B'], hint: 'Shines at night' },
-    { word: 'MOON', display: 'M _ O N', answer: 'O', options: ['O', 'U', 'A', 'I'], hint: 'Comes out at night' },
-    { word: 'BOOK', display: 'B _ O K', answer: 'O', options: ['O', 'U', 'A', 'I'], hint: 'You read it' },
-    
-    // 5-letter words (harder)
-    { word: 'HORSE', display: 'H _ R S E', answer: 'O', options: ['O', 'A', 'U', 'I'], hint: 'You can ride it' },
-    { word: 'HOUSE', display: 'H _ U S E', answer: 'O', options: ['O', 'A', 'U', 'I'], hint: 'Where you live' },
-    { word: 'WATER', display: 'W _ T E R', answer: 'A', options: ['A', 'E', 'I', 'O'], hint: 'You drink it' },
-    { word: 'FLOWER', display: 'F L _ W E R', answer: 'O', options: ['O', 'A', 'U', 'I'], hint: 'It grows in a garden' },
+    { word: 'CAT', display: 'C _ T', answer: 'A', hint: 'Says meow' },
+    { word: 'DOG', display: 'D _ G', answer: 'O', hint: 'Says woof' },
+    { word: 'SUN', display: 'S _ N', answer: 'U', hint: 'In the sky' },
+    { word: 'BIG', display: 'B _ G', answer: 'I', hint: 'Not small' },
+    { word: 'RED', display: 'R _ D', answer: 'E', hint: 'A color' },
+    { word: 'FISH', display: 'F _ S H', answer: 'I', hint: 'Swims in water' },
+    { word: 'BIRD', display: 'B _ R D', answer: 'I', hint: 'Can fly' },
+    { word: 'STAR', display: 'S _ A R', answer: 'T', hint: 'Shines at night' },
+    { word: 'MOON', display: 'M _ O N', answer: 'O', hint: 'Night light' },
+    { word: 'BOOK', display: 'B _ O K', answer: 'O', hint: 'You read it' },
+    { word: 'FROG', display: 'F _ O G', answer: 'R', hint: 'Says ribbit' },
+    { word: 'CAKE', display: 'C _ K E', answer: 'A', hint: 'Birthday treat' },
+    { word: 'TREE', display: 'T _ E E', answer: 'R', hint: 'Grows tall' },
+    { word: 'HORSE', display: 'H _ R S E', answer: 'O', hint: 'You ride it' },
+    { word: 'WATER', display: 'W _ T E R', answer: 'A', hint: 'You drink it' },
+    { word: 'HOUSE', display: 'H _ U S E', answer: 'O', hint: 'Where you live' },
   ];
   
-  let available = words;
-  if (difficulty <= 2) available = words.filter(w => w.word.length <= 3);
-  else if (difficulty <= 4) available = words.filter(w => w.word.length <= 4);
+  let pool = words;
+  if (difficulty <= 2) pool = words.filter(w => w.word.length <= 3);
+  else if (difficulty <= 4) pool = words.filter(w => w.word.length <= 4);
   
-  const word = available[Math.floor(Math.random() * available.length)];
+  const word = pool[Math.floor(Math.random() * pool.length)];
   
-  return {
-    question: `Fill in the blank:\n${word.display}`,
-    hint: word.hint,
-    answer: word.answer,
-    options: word.options.sort(() => Math.random() - 0.5)
-  };
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const opts = [word.answer];
+  while (opts.length < 4) {
+    const l = letters[Math.floor(Math.random() * letters.length)];
+    if (!opts.includes(l)) opts.push(l);
+  }
+  shuffle(opts);
+  
+  return { question: word.display, hint: word.hint, answer: word.answer, options: opts };
 }
 
-// Memory - must remember sequence
 function generateMemory(difficulty) {
-  const emojis = ['🌟', '🎈', '🎀', '🦋', '🌈', '🌺', '🎪', '🎠', '🎡', '🎢'];
-  const length = Math.min(3 + Math.floor(difficulty / 2), 7);
+  const emojis = ['🌟','🎈','🎀','🦋','🌈','🌺','🎪','🎠','🎡','🎢','🍕','🎸'];
+  const len = Math.min(3 + Math.floor(difficulty / 2), 7);
   
   const seq = [];
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < len; i++) {
     seq.push(emojis[Math.floor(Math.random() * emojis.length)]);
   }
   
-  // The question asks about a specific position
-  const askPosition = Math.floor(Math.random() * seq.length);
-  const positionNames = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
+  const askIdx = Math.floor(Math.random() * len);
+  const ordinals = ['1st','2nd','3rd','4th','5th','6th','7th'];
   
-  const correct = seq[askPosition];
-  const options = [correct];
-  while (options.length < 4) {
-    const opt = emojis[Math.floor(Math.random() * emojis.length)];
-    if (!options.includes(opt)) options.push(opt);
+  const correct = seq[askIdx];
+  const opts = [correct];
+  while (opts.length < 4) {
+    const e = emojis[Math.floor(Math.random() * emojis.length)];
+    if (!opts.includes(e)) opts.push(e);
   }
-  options.sort(() => Math.random() - 0.5);
+  shuffle(opts);
   
   return {
-    question: `Remember this sequence:\n${seq.join(' ')}`,
-    hint: `What was the ${positionNames[askPosition]} item?`,
+    question: seq.join(' '),
+    hint: `What was the ${ordinals[askIdx]} one?`,
     answer: correct,
-    options,
-    showTime: 2000 + length * 300 // More time for longer sequences
+    options: opts,
+    showTime: 1500 + len * 400
   };
 }
+
+// ============ HELPERS ============
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function generateNumberOptions(correct, count) {
+  const opts = [correct];
+  const offsets = [-3, -2, -1, 1, 2, 3, 4, -4];
+  let i = 0;
+  while (opts.length < count) {
+    const v = correct + offsets[i % offsets.length];
+    i++;
+    if (v > 0 && !opts.includes(v)) opts.push(v);
+  }
+  shuffle(opts);
+  return opts;
+}
+
+// ============ GAME STATE ============
 
 function initLevel() {
   height = 0;
@@ -444,23 +478,21 @@ function initLevel() {
   streak = 0;
   challengeActive = false;
   currentPlatformIndex = -1;
-  document.getElementById('challenge').style.display = 'none';
+  hideChallenge();
   
-  // Generate platforms
-  const platformCount = 5 + level * 2;
-  for (let i = 0; i < platformCount; i++) {
+  const count = 5 + level * 2;
+  for (let i = 0; i < count; i++) {
     platforms.push({
-      x: W * 0.15 + Math.random() * W * 0.7,
+      x: W * 0.12 + Math.random() * W * 0.76,
       y: H - 100 - i * 140,
-      width: 140,
-      height: 30,
+      width: 130,
+      height: 28,
       climbed: false,
-      bobPhase: Math.random() * Math.PI * 2,
-      hue: (i * 30) % 360
+      bob: Math.random() * Math.PI * 2,
+      hue: (i * 40) % 360
     });
   }
   
-  // Princess starting position
   princess.x = W * 0.5;
   princess.y = H - 80;
   princess.targetY = H - 80;
@@ -472,123 +504,10 @@ function initLevel() {
 function updateHUD() {
   document.getElementById('hud-height').textContent = `${Math.floor(height)}m`;
   document.getElementById('hud-score').textContent = score;
-  let hearts = '';
-  for (let i = 0; i < lives; i++) hearts += '❤️';
-  for (let i = lives; i < 3; i++) hearts += '🖤';
-  document.getElementById('hud-lives').textContent = hearts;
+  let h = '';
+  for (let i = 0; i < 3; i++) h += i < lives ? '❤️' : '🖤';
+  document.getElementById('hud-lives').textContent = h;
   document.getElementById('hud-prompt').textContent = challengeActive ? 'Solve the puzzle!' : 'Tap the next platform!';
-}
-
-function showChallenge(platformIndex) {
-  if (challengeActive) return; // Don't show multiple challenges
-  
-  challengeActive = true;
-  currentPlatformIndex = platformIndex;
-  let challenge;
-  
-  if (selectedMode === 'patterns') {
-    challenge = generatePattern(level);
-  } else if (selectedMode === 'math') {
-    challenge = generateMath(level);
-  } else if (selectedMode === 'words') {
-    challenge = generateWord(level);
-  } else if (selectedMode === 'memory') {
-    challenge = generateMemory(level);
-    
-    // For memory, show sequence first, then ask
-    document.getElementById('challenge-question').textContent = challenge.question;
-    document.getElementById('challenge-hint').textContent = 'Memorize this!';
-    document.getElementById('challenge-options').innerHTML = '';
-    document.getElementById('challenge').style.display = 'flex';
-    
-    setTimeout(() => {
-      document.getElementById('challenge-question').textContent = challenge.hint;
-      document.getElementById('challenge-hint').textContent = 'What did you see?';
-      currentChallenge = challenge;
-      renderOptions(challenge.options);
-    }, challenge.showTime);
-    
-    return;
-  }
-  
-  currentChallenge = challenge;
-  document.getElementById('challenge-question').textContent = challenge.question;
-  document.getElementById('challenge-hint').textContent = challenge.hint;
-  renderOptions(challenge.options);
-  document.getElementById('challenge').style.display = 'flex';
-}
-
-function renderOptions(options) {
-  const optionsDiv = document.getElementById('challenge-options');
-  optionsDiv.innerHTML = '';
-  
-  options.forEach(opt => {
-    const btn = document.createElement('div');
-    btn.className = 'option';
-    btn.textContent = opt;
-    btn.addEventListener('click', () => handleAnswer(opt, btn));
-    optionsDiv.appendChild(btn);
-  });
-}
-
-function handleAnswer(answer, btn) {
-  if (!challengeActive || !currentChallenge) return;
-  
-  const correct = answer.toString() === currentChallenge.answer.toString();
-  
-  if (correct) {
-    // Correct!
-    challengeActive = false;
-    btn.classList.add('correct');
-    streak++;
-    
-    const streakBonus = streak > 1 ? streak * 25 : 0;
-    const points = 100 + level * 20 + streakBonus;
-    score += points;
-    height += 20;
-    
-    addCatchEffect(princess.x, princess.y, '#44ff44');
-    const streakText = streak > 1 ? ` 🔥${streak}` : '';
-    showFeedback(`+${points}${streakText}`);
-    
-    setTimeout(() => {
-      document.getElementById('challenge').style.display = 'none';
-      
-      // Climb to next platform
-      const platform = platforms[currentPlatformIndex];
-      if (platform) {
-        platform.climbed = true;
-        princess.targetY = platform.y - 20;
-        princess.jumping = true;
-        princess.jumpVel = -10;
-        cameraY += 140;
-      }
-      
-      updateHUD();
-      
-      // Check if level complete
-      const climbed = platforms.filter(p => p.climbed).length;
-      if (climbed >= platforms.length) {
-        setTimeout(levelComplete, 500);
-      }
-    }, 800);
-    
-  } else {
-    // Wrong
-    btn.classList.add('wrong');
-    lives--;
-    streak = 0;
-    updateHUD();
-    
-    if (lives <= 0) {
-      challengeActive = false;
-      setTimeout(gameOver, 500);
-    } else {
-      showFeedback('❌ WRONG!');
-      // Don't close challenge - let them try again
-      setTimeout(() => btn.classList.remove('wrong'), 500);
-    }
-  }
 }
 
 function showFeedback(text) {
@@ -599,13 +518,137 @@ function showFeedback(text) {
   el.classList.add('show');
 }
 
+// ============ CHALLENGE FLOW ============
+
+function showChallenge(idx) {
+  if (challengeActive) return;
+  challengeActive = true;
+  currentPlatformIndex = idx;
+  updateHUD();
+  
+  let ch;
+  if (selectedMode === 'patterns') ch = generatePattern(level);
+  else if (selectedMode === 'math') ch = generateMath(level);
+  else if (selectedMode === 'words') ch = generateWord(level);
+  else ch = generateMemory(level);
+  
+  currentChallenge = ch;
+  
+  if (selectedMode === 'memory') {
+    // Show sequence first
+    document.getElementById('challenge-question').textContent = ch.question;
+    document.getElementById('challenge-hint').textContent = 'Memorize this!';
+    document.getElementById('challenge-options').innerHTML = '';
+    document.getElementById('challenge-overlay').classList.add('active');
+    
+    setTimeout(() => {
+      document.getElementById('challenge-question').textContent = '❓';
+      document.getElementById('challenge-hint').textContent = ch.hint;
+      renderChallengeOptions(ch.options);
+    }, ch.showTime);
+  } else {
+    document.getElementById('challenge-question').textContent = ch.question;
+    document.getElementById('challenge-hint').textContent = ch.hint;
+    renderChallengeOptions(ch.options);
+    document.getElementById('challenge-overlay').classList.add('active');
+  }
+}
+
+function renderChallengeOptions(options) {
+  const container = document.getElementById('challenge-options');
+  container.innerHTML = '';
+  
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAnswer(opt, btn);
+    });
+    btn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAnswer(opt, btn);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function hideChallenge() {
+  document.getElementById('challenge-overlay').classList.remove('active');
+  challengeActive = false;
+  currentChallenge = null;
+  updateHUD();
+}
+
+function handleAnswer(answer, btn) {
+  if (!challengeActive || !currentChallenge) return;
+  
+  // Disable all buttons immediately
+  document.querySelectorAll('.option-btn').forEach(b => b.style.pointerEvents = 'none');
+  
+  const correct = String(answer) === String(currentChallenge.answer);
+  
+  if (correct) {
+    btn.classList.add('correct');
+    streak++;
+    const bonus = streak > 1 ? streak * 25 : 0;
+    const pts = 100 + level * 20 + bonus;
+    score += pts;
+    height += 20;
+    
+    addCatchEffect(princess.x, princess.y, '#44ff44');
+    const st = streak > 1 ? ` 🔥${streak}` : '';
+    showFeedback(`+${pts}${st}`);
+    
+    setTimeout(() => {
+      hideChallenge();
+      
+      const p = platforms[currentPlatformIndex];
+      if (p) {
+        p.climbed = true;
+        princess.targetY = p.y - 20;
+        princess.jumping = true;
+        princess.jumpVel = -10;
+        cameraY += 140;
+      }
+      
+      updateHUD();
+      
+      if (platforms.filter(p => p.climbed).length >= platforms.length) {
+        setTimeout(levelComplete, 500);
+      }
+    }, 700);
+  } else {
+    btn.classList.add('wrong');
+    lives--;
+    streak = 0;
+    updateHUD();
+    
+    if (lives <= 0) {
+      setTimeout(() => {
+        hideChallenge();
+        gameOver();
+      }, 600);
+    } else {
+      showFeedback('❌');
+      // Re-enable buttons after a moment
+      setTimeout(() => {
+        btn.classList.remove('wrong');
+        document.querySelectorAll('.option-btn').forEach(b => b.style.pointerEvents = 'auto');
+      }, 500);
+    }
+  }
+}
+
 function levelComplete() {
   gameRunning = false;
-  
   const stars = lives === 3 ? '⭐⭐⭐' : lives === 2 ? '⭐⭐' : '⭐';
-  document.getElementById('lc-title').textContent = `LEVEL ${level} COMPLETE!`;
+  document.getElementById('lc-title').textContent = `LEVEL ${level} DONE!`;
   document.getElementById('lc-stars').textContent = stars;
-  document.getElementById('lc-stats').textContent = `Height: ${Math.floor(height)}m | Score: ${score} | Streak: ${streak}🔥`;
+  document.getElementById('lc-stats').textContent = `Height: ${Math.floor(height)}m | Score: ${score}`;
   document.getElementById('level-complete').style.display = 'flex';
 }
 
@@ -632,16 +675,17 @@ function retryGame() {
   gameLoop();
 }
 
-// Drawing functions
+// ============ DRAWING ============
+
 function drawSky() {
-  const gradient = ctx.createLinearGradient(0, 0, 0, H);
-  gradient.addColorStop(0, '#0a0a3e');
-  gradient.addColorStop(0.5, '#1a1a5e');
-  gradient.addColorStop(1, '#2d0a3e');
-  ctx.fillStyle = gradient;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0a0a3e');
+  g.addColorStop(0.5, '#1a1a5e');
+  g.addColorStop(1, '#2d0a3e');
+  ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
   
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
   for (let i = 0; i < 50; i++) {
     const x = (i * 137.5 + i * i * 7) % W;
     const y = (i * 89.3 + i * 31 + cameraY * 0.3) % (H * 2) - H * 0.5;
@@ -650,54 +694,46 @@ function drawSky() {
     ctx.fill();
   }
   
-  ctx.fillStyle = 'rgba(255, 255, 200, 0.15)';
+  ctx.fillStyle = 'rgba(255,255,200,0.12)';
   ctx.beginPath();
   ctx.arc(W * 0.8, H * 0.1 - cameraY * 0.1, 50, 0, Math.PI * 2);
   ctx.fill();
 }
 
-function drawPlatform(platform) {
-  const screenY = platform.y + cameraY;
-  if (screenY < -50 || screenY > H + 50) return;
+function drawPlatform(p) {
+  const sy = p.y + cameraY;
+  if (sy < -50 || sy > H + 50) return;
   
-  platform.bobPhase += 0.03;
-  const bob = Math.sin(platform.bobPhase) * 3;
+  p.bob += 0.03;
+  const bob = Math.sin(p.bob) * 3;
+  const x = p.x, y = sy + bob, w = p.width, h = p.height;
   
-  const x = platform.x;
-  const y = screenY + bob;
-  const w = platform.width;
-  const h = platform.height;
+  const next = platforms.find(pp => !pp.climbed);
+  const isNext = p === next && !challengeActive;
   
-  // Glow if it's the next platform to climb
-  const nextPlatform = platforms.find(p => !p.climbed);
-  const isNext = platform === nextPlatform;
-  
-  if (isNext && !challengeActive) {
-    ctx.fillStyle = `hsla(${platform.hue}, 70%, 50%, 0.3)`;
+  if (isNext) {
+    ctx.fillStyle = `hsla(${p.hue}, 70%, 50%, 0.25)`;
     ctx.beginPath();
-    ctx.arc(x + w / 2, y + h / 2, w * 0.8, 0, Math.PI * 2);
+    ctx.arc(x + w / 2, y + h / 2, w * 0.7, 0, Math.PI * 2);
     ctx.fill();
     
-    // Arrow pointing to it
-    const arrowY = y - 25 + Math.sin(platform.bobPhase * 2) * 5;
+    const ay = y - 25 + Math.sin(p.bob * 2) * 5;
     ctx.fillStyle = '#ffd700';
-    ctx.font = '24px Arial';
+    ctx.font = '22px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('👇', x + w / 2, arrowY);
+    ctx.fillText('👇', x + w / 2, ay);
   }
   
-  // Platform body
-  ctx.fillStyle = platform.climbed ? '#555' : `hsl(${platform.hue}, 70%, 50%)`;
+  ctx.fillStyle = p.climbed ? '#555' : `hsl(${p.hue}, 70%, 50%)`;
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, 10);
   ctx.fill();
   
-  // Show platform number
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 14px Arial';
+  ctx.font = 'bold 13px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(platforms.indexOf(platform) + 1, x + w / 2, y + h / 2);
+  ctx.fillText(platforms.indexOf(p) + 1, x + w / 2, y + h / 2);
 }
 
 function drawPrincess() {
@@ -734,11 +770,10 @@ function drawPrincess() {
   ctx.ellipse(-7, -5, 5, 6, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.fillStyle = '#fff';
   ctx.beginPath();
   ctx.ellipse(7, -5, 5, 6, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#000'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.strokeStyle = '#000'; ctx.stroke();
   
   ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
   ctx.beginPath();
@@ -750,10 +785,7 @@ function drawPrincess() {
 
 function drawParticles() {
   particles.forEach((p, i) => {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.05;
-    p.life -= 0.02;
+    p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life -= 0.02;
     if (p.life <= 0) { particles.splice(i, 1); return; }
     ctx.globalAlpha = p.life;
     ctx.fillStyle = p.color;
@@ -766,9 +798,7 @@ function drawParticles() {
 
 function drawSparkles() {
   sparkles.forEach((s, i) => {
-    s.x += s.vx;
-    s.y += s.vy;
-    s.life -= 0.015;
+    s.x += s.vx; s.y += s.vy; s.life -= 0.015;
     if (s.life <= 0) { sparkles.splice(i, 1); return; }
     ctx.globalAlpha = s.life;
     ctx.fillStyle = '#ffd700';
@@ -782,51 +812,58 @@ function drawSparkles() {
 
 function addCatchEffect(x, y, color) {
   for (let i = 0; i < 10; i++) {
-    particles.push({
-      x, y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6 - 2,
-      size: 4 + Math.random() * 5,
-      life: 1,
-      color: color || '#ffd700'
-    });
+    particles.push({ x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6-2, size: 4+Math.random()*5, life: 1, color: color||'#ffd700' });
   }
   for (let i = 0; i < 5; i++) {
-    sparkles.push({
-      x: x + (Math.random() - 0.5) * 40,
-      y: y + (Math.random() - 0.5) * 40,
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
-      size: Math.random() * 4,
-      life: 1
-    });
+    sparkles.push({ x: x+(Math.random()-0.5)*40, y: y+(Math.random()-0.5)*40, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2, size: Math.random()*4, life: 1 });
   }
 }
+
+// ============ INPUT ============
 
 function handleTap(x, y) {
   if (!gameRunning || challengeActive) return;
   
-  const worldY = y - cameraY;
+  const wy = y - cameraY;
+  const next = platforms.find(p => !p.climbed);
+  if (!next) return;
   
-  // Find the next unclimbed platform
-  const nextPlatform = platforms.find(p => !p.climbed);
-  if (!nextPlatform) return;
-  
-  const idx = platforms.indexOf(nextPlatform);
-  
-  // Check if tap is near the next platform
-  if (x >= nextPlatform.x - 30 && x <= nextPlatform.x + nextPlatform.width + 30 &&
-      worldY >= nextPlatform.y - 50 && worldY <= nextPlatform.y + nextPlatform.height + 50) {
-    
-    // Move princess toward platform
-    princess.x += (nextPlatform.x + nextPlatform.width / 2 - princess.x) * 0.3;
-    
-    // Show challenge
+  const idx = platforms.indexOf(next);
+  if (x >= next.x - 30 && x <= next.x + next.width + 30 &&
+      wy >= next.y - 50 && wy <= next.y + next.height + 50) {
+    princess.x += (next.x + next.width / 2 - princess.x) * 0.3;
     showChallenge(idx);
   }
 }
 
-// Main game loop
+canvas.addEventListener('mousedown', e => handleTap(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  handleTap(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: false });
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedMode = btn.dataset.mode;
+  });
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  level = 1; score = 0;
+  initLevel();
+  gameRunning = true;
+  gameLoop();
+});
+
+document.getElementById('next-btn').addEventListener('click', nextLevel);
+document.getElementById('retry-btn').addEventListener('click', retryGame);
+
+// ============ GAME LOOP ============
+
 function gameLoop() {
   if (!gameRunning) return;
   
@@ -847,35 +884,6 @@ function gameLoop() {
   
   requestAnimationFrame(gameLoop);
 }
-
-// Event handlers
-canvas.addEventListener('mousedown', (e) => { handleTap(e.clientX, e.clientY); });
-canvas.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  const t = e.touches[0];
-  handleTap(t.clientX, t.clientY);
-}, { passive: false });
-
-document.querySelectorAll('.mode-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedMode = btn.dataset.mode;
-  });
-});
-
-document.getElementById('start-btn').addEventListener('click', () => {
-  document.getElementById('start-screen').style.display = 'none';
-  document.getElementById('hud').style.display = 'flex';
-  level = 1;
-  score = 0;
-  initLevel();
-  gameRunning = true;
-  gameLoop();
-});
-
-document.getElementById('next-btn').addEventListener('click', nextLevel);
-document.getElementById('retry-btn').addEventListener('click', retryGame);
 </script>
 </body>
 </html>
