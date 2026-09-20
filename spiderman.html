@@ -15,10 +15,10 @@ body {
   height: 100vh;
   width: 100vw;
   background: #1a1a4e;
+  touch-action: manipulation;
 }
 canvas { display: block; }
 
-/* Start Screen */
 #start-screen {
   position: fixed; inset: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -32,26 +32,11 @@ canvas { display: block; }
   text-shadow: 0 0 30px rgba(255,0,0,0.4);
   margin-bottom: 10px;
 }
-.subtitle { font-size: 22px; color: #ff8888; margin-bottom: 20px; text-align: center; }
-
-.hero-display {
-  font-size: 100px;
-  margin: 15px 0;
-  animation: heroBounce 2s ease-in-out infinite;
-}
+.subtitle { font-size: 24px; color: #ff8888; margin-bottom: 20px; text-align: center; }
+.hero-display { font-size: 100px; margin: 15px 0; animation: heroBounce 2s ease-in-out infinite; }
 @keyframes heroBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
-
-.hero-name {
-  font-size: 24px; font-weight: 900; color: #ff4444;
-  margin-bottom: 20px;
-  text-shadow: 0 0 20px rgba(255,0,0,0.5);
-}
-
-.instructions {
-  color: #ccc; font-size: 18px; text-align: center; margin-bottom: 25px;
-  line-height: 1.8; max-width: 320px;
-}
-.instructions span { color: #ff4444; font-weight: 700; font-size: 22px; }
+.instructions { color: #ccc; font-size: 22px; text-align: center; margin-bottom: 25px; line-height: 2; }
+.instructions span { color: #ffd700; font-weight: 700; font-size: 26px; }
 
 #start-btn {
   font-size: 36px; font-weight: 800; padding: 18px 55px; border: none;
@@ -63,108 +48,42 @@ canvas { display: block; }
 #start-btn:hover { transform: scale(1.08); }
 @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
 
-/* HUD */
 #hud {
-  position: fixed; top: 0; left: 0; right: 0;
-  display: none; justify-content: space-between; align-items: flex-start;
-  padding: 15px 20px; z-index: 10; pointer-events: none;
+  position: fixed; top: 10px; left: 0; right: 0;
+  display: none; justify-content: center; align-items: center;
+  padding: 10px; z-index: 10; pointer-events: none;
+  flex-direction: column;
 }
-#hud .center { display: flex; flex-direction: column; align-items: center; }
-#hud .score-display { font-size: 36px; font-weight: 900; color: #ffd700; text-shadow: 0 0 15px rgba(255,215,0,0.5); }
-#hud .label { font-size: 16px; color: #ffaa44; font-weight: 600; }
+#hud .score-display { font-size: 48px; font-weight: 900; color: #ffd700; text-shadow: 0 0 20px rgba(255,215,0,0.6); }
+#hud .label { font-size: 18px; color: #ffaa44; font-weight: 600; }
 
-/* Message display */
-#message {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  font-size: 48px; font-weight: 900; color: #ffd700;
-  text-shadow: 0 0 30px rgba(255,215,0,0.8);
-  z-index: 50; pointer-events: none;
-  opacity: 0; transition: opacity 0.3s;
-}
-#message.show { opacity: 1; }
-
-/* Game Over */
-#game-over {
-  position: fixed; inset: 0; display: none; flex-direction: column;
-  align-items: center; justify-content: center; z-index: 100;
-  background: rgba(26,10,60,0.95); backdrop-filter: blur(10px);
-}
-#game-over h2 { font-size: 42px; font-weight: 900; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.5); margin-bottom: 10px; }
-#game-over .final-score { font-size: 72px; font-weight: 900; color: #fff; margin: 10px 0; }
-#game-over .subtitle { font-size: 20px; color: #ff8888; margin-bottom: 25px; }
-#restart-btn {
-  font-size: 30px; font-weight: 800; padding: 16px 50px; border: none;
-  border-radius: 50px; background: linear-gradient(135deg, #ff0000, #cc0000);
-  color: white; cursor: pointer; pointer-events: auto;
-  box-shadow: 0 8px 30px rgba(255,0,0,0.4); transition: transform 0.2s;
-}
-#restart-btn:hover { transform: scale(1.08); }
-
-/* Exit button */
-#exit-btn {
-  position: fixed; bottom: 15px; right: 15px; z-index: 15;
-  font-size: 16px; font-weight: 700; padding: 10px 20px;
-  border: 2px solid rgba(255,255,255,0.3); border-radius: 25px;
-  background: rgba(255,255,255,0.1); color: #fff;
-  cursor: pointer; pointer-events: auto;
-  backdrop-filter: blur(5px); transition: all 0.2s;
-  display: none;
-}
-#exit-btn:hover { background: rgba(255,100,100,0.3); border-color: #ff6b6b; }
-
-/* Floating effects */
 .float-text {
   position: fixed; pointer-events: none; z-index: 50;
-  font-size: 36px; font-weight: 900; color: #ffd700;
-  text-shadow: 0 0 15px rgba(255,215,0,0.8);
-  animation: floatUp 1.2s ease-out forwards;
+  font-size: 50px; font-weight: 900; color: #ffd700;
+  text-shadow: 0 0 20px rgba(255,215,0,0.8);
+  animation: floatUp 1.5s ease-out forwards;
 }
-@keyframes floatUp { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-100px) scale(1.5);opacity:0} }
-
-.star-burst {
-  position: fixed; pointer-events: none; z-index: 50;
-  font-size: 50px; animation: starPop 1s ease-out forwards;
-}
-@keyframes starPop { 0%{transform:scale(0) rotate(0deg);opacity:1} 50%{transform:scale(1.5) rotate(180deg);opacity:1} 100%{transform:scale(0) rotate(360deg);opacity:0} }
+@keyframes floatUp { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-120px) scale(1.8);opacity:0} }
 </style>
 </head>
 <body>
 
 <div id="start-screen">
   <h1>Spider-Man:<br>Catch the Spiders!</h1>
-  <div class="subtitle">Help Spider-Man catch his spider friends!</div>
-  
+  <div class="subtitle">Help Spider-Man find his friends!</div>
   <div class="hero-display">🕷️</div>
-  <div class="hero-name">SPIDER-MAN</div>
-  
   <div class="instructions">
-    <span>TAP</span> to make Spider-Man fly up!<br>
-    Catch the <span>🕷️</span> spider friends!<br>
-    Don't touch the <span>💣</span> bombs!
+    <span>TAP</span> on the spider friends to catch them!
   </div>
-  
   <button id="start-btn">LET'S PLAY!</button>
 </div>
 
 <div id="hud">
-  <div class="center">
-    <div class="label">SPIDER FRIENDS CAUGHT</div>
-    <div class="score-display" id="hud-score">0</div>
-  </div>
+  <div class="label">SPIDER FRIENDS</div>
+  <div class="score-display" id="hud-score">0</div>
 </div>
-
-<div id="message"></div>
 
 <canvas id="canvas"></canvas>
-
-<div id="game-over">
-  <h2 id="go-title">AMAZING!</h2>
-  <div class="final-score" id="go-score">0</div>
-  <div class="subtitle">Spider friends caught!</div>
-  <button id="restart-btn">PLAY AGAIN!</button>
-</div>
-
-<button id="exit-btn">✕ Exit</button>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -174,113 +93,85 @@ function resize() { W = canvas.width = window.innerWidth; H = canvas.height = wi
 resize();
 window.addEventListener('resize', resize);
 
-// Game state
 let score = 0;
 let gameRunning = false;
-let gameOverTimer = 0;
-
-// Spider-Man (the player)
-let spider = {
-  x: 0, y: 0,
-  vy: 0,
-  radius: 30,
-  flap: 0,
-  invincible: 0
-};
-
-// Game objects
 let spiderFriends = [];
-let bombs = [];
 let particles = [];
+let webs = [];
 let clouds = [];
 let buildings = [];
-
-// Timing
-let lastTime = 0;
+let sparkles = [];
 let spawnTimer = 0;
-let bombSpawnTimer = 0;
-let difficultyTimer = 0;
-let bombChance = 0.15;
 
-// Initialize game
+// Spider-Man stays in the middle-ish area, looking around
+let spiderman = { x: 0, y: 0, lookDir: 1, bobPhase: 0 };
+
 function initGame() {
   score = 0;
-  gameOverTimer = 0;
-  
-  spider.x = W * 0.3;
-  spider.y = H * 0.5;
-  spider.vy = 0;
-  spider.flap = 0;
-  spider.invincible = 0;
-  
   spiderFriends = [];
-  bombs = [];
   particles = [];
-  clouds = [];
-  buildings = [];
+  webs = [];
+  sparkles = [];
   spawnTimer = 0;
-  bombSpawnTimer = 0;
-  difficultyTimer = 0;
-  bombChance = 0.15;
   
-  // Generate clouds
-  for (let i = 0; i < 10; i++) {
-    clouds.push({
-      x: Math.random() * W,
-      y: Math.random() * H * 0.5,
-      size: 40 + Math.random() * 80,
-      speed: 0.3 + Math.random() * 0.5
-    });
+  spiderman.x = W * 0.5;
+  spiderman.y = H * 0.5;
+  
+  // Clouds
+  clouds = [];
+  for (let i = 0; i < 8; i++) {
+    clouds.push({ x: Math.random() * W, y: Math.random() * H * 0.4, size: 50 + Math.random() * 80, speed: 0.2 + Math.random() * 0.3 });
   }
   
-  // Generate buildings at bottom
+  // Buildings
+  buildings = [];
   let bx = 0;
-  while (bx < W + 200) {
-    const w = 50 + Math.random() * 80;
-    const h = 80 + Math.random() * 150;
-    buildings.push({
-      x: bx, w, h,
-      color: `hsl(${220 + Math.random() * 20}, ${20 + Math.random() * 20}%, ${20 + Math.random() * 10}%)`
-    });
-    bx += w + 20 + Math.random() * 40;
+  while (bx < W + 100) {
+    const w = 40 + Math.random() * 70;
+    const h = 60 + Math.random() * 120;
+    buildings.push({ x: bx, w, h, color: `hsl(${220 + Math.random() * 20}, 20%, ${18 + Math.random() * 8}%)` });
+    bx += w + 15 + Math.random() * 30;
   }
+  
+  // Spawn initial spiders
+  for (let i = 0; i < 3; i++) spawnSpiderFriend();
 }
 
-// Spawn a spider friend
 function spawnSpiderFriend() {
+  // Spawn at random position, slowly drifting
+  const side = Math.random() < 0.5 ? -1 : 1;
   spiderFriends.push({
-    x: W + 30,
-    y: 50 + Math.random() * (H - 200),
-    radius: 25,
-    speed: 1.5 + Math.random() * 1,
+    x: side === -1 ? -40 : W + 40,
+    y: 80 + Math.random() * (H - 200),
+    targetX: 100 + Math.random() * (W - 200),
+    targetY: 80 + Math.random() * (H - 200),
+    radius: 35,
+    speed: 0.4 + Math.random() * 0.3,
     bobPhase: Math.random() * Math.PI * 2,
-    collected: false
+    caught: false,
+    catchAnim: 0
   });
 }
 
-// Spawn a bomb
-function spawnBomb() {
-  bombs.push({
-    x: W + 30,
-    y: 50 + Math.random() * (H - 200),
-    radius: 20,
-    speed: 2 + Math.random() * 1.5
-  });
-}
-
-// Draw functions
 function drawSky() {
   const gradient = ctx.createLinearGradient(0, 0, 0, H);
-  gradient.addColorStop(0, '#1a1a4e');
+  gradient.addColorStop(0, '#0a0a3e');
+  gradient.addColorStop(0.6, '#1a1a5e');
   gradient.addColorStop(1, '#2d0a3e');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, W, H);
   
+  // Big friendly moon
+  ctx.fillStyle = 'rgba(255, 255, 200, 0.15)';
+  ctx.beginPath();
+  ctx.arc(W * 0.8, H * 0.15, 60, 0, Math.PI * 2);
+  ctx.fill();
+  
   // Stars
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-  for (let i = 0; i < 30; i++) {
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  for (let i = 0; i < 40; i++) {
     const x = (i * 137.5 + i * i * 7) % W;
-    const y = (i * 89.3 + i * 31) % (H * 0.6);
+    const y = (i * 89.3 + i * 31) % (H * 0.5);
     const size = 1 + (i % 3);
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -292,16 +183,12 @@ function drawClouds() {
   clouds.forEach(c => {
     c.x -= c.speed;
     if (c.x < -c.size) c.x = W + c.size;
-    
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.beginPath();
     ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
     ctx.arc(c.x - c.size * 0.4, c.y + c.size * 0.15, c.size * 0.7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(c.x + c.size * 0.35, c.y + c.size * 0.1, c.size * 0.75, 0, Math.PI * 2);
     ctx.fill();
   });
 }
@@ -310,82 +197,63 @@ function drawBuildings() {
   buildings.forEach(b => {
     ctx.fillStyle = b.color;
     ctx.fillRect(b.x, H - b.h, b.w, b.h);
-    
-    // Windows
-    for (let row = 0; row < Math.floor(b.h / 35); row++) {
-      for (let col = 0; col < Math.floor(b.w / 20); col++) {
-        const wx = b.x + 8 + col * 20;
-        const wy = H - b.h + 10 + row * 35;
-        ctx.fillStyle = Math.random() > 0.3 ? 'rgba(255, 200, 100, 0.5)' : 'rgba(0, 0, 0, 0.3)';
-        ctx.fillRect(wx, wy, 10, 14);
+    for (let row = 0; row < Math.floor(b.h / 30); row++) {
+      for (let col = 0; col < Math.floor(b.w / 18); col++) {
+        ctx.fillStyle = Math.random() > 0.4 ? 'rgba(255, 200, 100, 0.4)' : 'rgba(0,0,0,0.2)';
+        ctx.fillRect(b.x + 6 + col * 18, H - b.h + 8 + row * 30, 8, 12);
       }
     }
   });
 }
 
-function drawSpider() {
-  const x = spider.x;
-  const y = spider.y;
+function drawSpiderMan() {
+  const x = spiderman.x;
+  const y = spiderman.y;
   
-  // Invincibility flash
-  if (spider.invincible > 0 && Math.floor(spider.invincible * 10) % 2 === 0) return;
+  spiderman.bobPhase += 0.03;
+  const bob = Math.sin(spiderman.bobPhase) * 5;
   
   ctx.save();
-  ctx.translate(x, y);
+  ctx.translate(x, y + bob);
   
-  // Flap animation
-  spider.flap += 0.15;
-  const flapAngle = Math.sin(spider.flap) * 0.2;
-  ctx.rotate(flapAngle);
-  
-  // Body (red)
+  // Body
   ctx.fillStyle = '#cc0000';
   ctx.beginPath();
-  ctx.arc(0, 0, spider.radius, 0, Math.PI * 2);
+  ctx.arc(0, 0, 28, 0, Math.PI * 2);
   ctx.fill();
   
-  // Blue lower half
   ctx.fillStyle = '#0044cc';
   ctx.beginPath();
-  ctx.arc(0, 0, spider.radius, Math.PI * 0.1, Math.PI * 0.9);
+  ctx.arc(0, 0, 28, 0, Math.PI);
   ctx.fill();
   
-  // Web pattern
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+  // Web lines
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
   ctx.lineWidth = 1;
   for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2;
+    const a = (i / 6) * Math.PI * 2;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(angle) * spider.radius, Math.sin(angle) * spider.radius);
+    ctx.lineTo(Math.cos(a) * 28, Math.sin(a) * 28);
     ctx.stroke();
   }
   
-  // Eyes (big and friendly)
-  const eyeY = -6;
-  const eyeX = 10;
-  // Left eye
+  // Eyes
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.ellipse(-eyeX, eyeY, 8, 10, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(-9, -6, 7, 9, -0.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  // Right eye
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.ellipse(eyeX, eyeY, 8, 10, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(9, -6, 7, 9, 0.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
   
   // Smile
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(0, 5, 10, 0.2, Math.PI - 0.2);
+  ctx.arc(0, 4, 8, 0.2, Math.PI - 0.2);
   ctx.stroke();
   
   ctx.restore();
@@ -393,52 +261,73 @@ function drawSpider() {
 
 function drawSpiderFriends() {
   spiderFriends.forEach(s => {
-    if (s.collected) return;
+    if (s.caught) {
+      // Catch animation - scale up and fade
+      s.catchAnim += 0.05;
+      if (s.catchAnim > 1) return;
+      
+      ctx.globalAlpha = 1 - s.catchAnim;
+      ctx.font = `${40 + s.catchAnim * 30}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🕷️', s.x, s.y - s.catchAnim * 50);
+      ctx.globalAlpha = 1;
+      return;
+    }
     
-    s.bobPhase += 0.05;
-    const bobY = Math.sin(s.bobPhase) * 8;
+    // Move toward target
+    const dx = s.targetX - s.x;
+    const dy = s.targetY - s.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 2) {
+      s.x += (dx / dist) * s.speed;
+      s.y += (dy / dist) * s.speed;
+    } else {
+      // Pick new target
+      s.targetX = 80 + Math.random() * (W - 160);
+      s.targetY = 80 + Math.random() * (H - 200);
+    }
     
-    // Glow
-    ctx.fillStyle = 'rgba(255, 200, 0, 0.2)';
+    s.bobPhase += 0.04;
+    const bob = Math.sin(s.bobPhase) * 6;
+    
+    // Big glow so it's obvious
+    ctx.fillStyle = 'rgba(255, 200, 0, 0.15)';
     ctx.beginPath();
-    ctx.arc(s.x, s.y + bobY, s.radius + 10, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y + bob, s.radius + 20, 0, Math.PI * 2);
     ctx.fill();
     
-    // Spider friend (cute emoji)
-    ctx.font = '40px Arial';
+    // Pulsing ring
+    const pulseSize = s.radius + 10 + Math.sin(s.bobPhase * 2) * 5;
+    ctx.strokeStyle = 'rgba(255, 215, 0, 0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y + bob, pulseSize, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // The spider emoji - BIG
+    ctx.font = '50px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🕷️', s.x, s.y + bobY);
+    ctx.fillText('🕷️', s.x, s.y + bob);
   });
 }
 
-function drawBombs() {
-  bombs.forEach(b => {
-    // Bomb
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-    ctx.fill();
+function drawWebs() {
+  webs.forEach((w, i) => {
+    w.life -= 0.03;
+    if (w.life <= 0) { webs.splice(i, 1); return; }
     
-    // Fuse
-    ctx.strokeStyle = '#666';
+    ctx.globalAlpha = w.life;
+    ctx.strokeStyle = '#fff';
     ctx.lineWidth = 3;
+    ctx.setLineDash([8, 4]);
     ctx.beginPath();
-    ctx.moveTo(b.x, b.y - b.radius);
-    ctx.quadraticCurveTo(b.x + 8, b.y - b.radius - 12, b.x + 4, b.y - b.radius - 18);
+    ctx.moveTo(w.fromX, w.fromY);
+    ctx.lineTo(w.toX, w.toY);
     ctx.stroke();
-    
-    // Spark
-    ctx.fillStyle = '#ff4400';
-    ctx.beginPath();
-    ctx.arc(b.x + 4, b.y - b.radius - 18, 5, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Skull
-    ctx.font = '22px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('💀', b.x, b.y);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   });
 }
 
@@ -446,32 +335,59 @@ function drawParticles() {
   particles.forEach((p, i) => {
     p.x += p.vx;
     p.y += p.vy;
-    p.life -= 0.02;
-    p.vy += 0.05;
+    p.life -= 0.015;
+    p.vy += 0.02;
     
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-      return;
-    }
+    if (p.life <= 0) { particles.splice(i, 1); return; }
     
     ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
+    ctx.font = `${p.size}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.emoji, p.x, p.y);
+    ctx.globalAlpha = 1;
+  });
+}
+
+function drawSparkles() {
+  sparkles.forEach((s, i) => {
+    s.life -= 0.02;
+    if (s.life <= 0) { sparkles.splice(i, 1); return; }
+    
+    ctx.globalAlpha = s.life;
+    ctx.fillStyle = s.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
   });
 }
 
-function spawnParticles(x, y, color, count) {
-  for (let i = 0; i < count; i++) {
+function spawnCatchEffect(x, y) {
+  // Stars and sparkles
+  const emojis = ['⭐', '✨', '🌟', '💫'];
+  for (let i = 0; i < 8; i++) {
     particles.push({
       x, y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6,
-      size: 4 + Math.random() * 6,
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.5) * 5 - 2,
+      size: 20 + Math.random() * 20,
       life: 1,
-      color
+      emoji: emojis[Math.floor(Math.random() * emojis.length)]
+    });
+  }
+  
+  // Sparkle circles
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    sparkles.push({
+      x: x + Math.cos(angle) * 30,
+      y: y + Math.sin(angle) * 30,
+      vx: Math.cos(angle) * 2,
+      vy: Math.sin(angle) * 2,
+      size: 5 + Math.random() * 5,
+      life: 1,
+      color: `hsl(${40 + Math.random() * 20}, 100%, ${60 + Math.random() * 30}%)`
     });
   }
 }
@@ -480,184 +396,94 @@ function showFloatingText(x, y, text) {
   const div = document.createElement('div');
   div.className = 'float-text';
   div.textContent = text;
-  div.style.left = x + 'px';
+  div.style.left = (x - 30) + 'px';
   div.style.top = y + 'px';
   document.body.appendChild(div);
-  setTimeout(() => div.remove(), 1200);
+  setTimeout(() => div.remove(), 1500);
 }
 
-function showMessage(text) {
-  const msgEl = document.getElementById('message');
-  msgEl.textContent = text;
-  msgEl.classList.add('show');
-  setTimeout(() => msgEl.classList.remove('show'), 1500);
-}
-
-// Physics and game logic
-function update(deltaTime) {
-  // Spider-Man physics
-  spider.vy += 0.25; // Gravity
-  spider.y += spider.vy;
+// Handle tap
+function handleTap(x, y) {
+  if (!gameRunning) return;
   
-  // Invincibility
-  if (spider.invincible > 0) spider.invincible -= deltaTime;
+  // Move Spider-Man toward tap
+  spiderman.x += (x - spiderman.x) * 0.3;
+  spiderman.y += (y - spiderman.y) * 0.3;
   
-  // Bounds
-  if (spider.y > H - 60) {
-    spider.y = H - 60;
-    spider.vy = -8; // Bounce off ground
-    spawnParticles(spider.x, spider.y, '#ff4444', 5);
-  }
-  if (spider.y < 30) {
-    spider.y = 30;
-    spider.vy = 2;
-  }
-  
-  // Spawn spider friends
-  spawnTimer += deltaTime;
-  if (spawnTimer > 1.2) {
-    spawnTimer = 0;
-    spawnSpiderFriend();
-  }
-  
-  // Spawn bombs (increases over time)
-  bombSpawnTimer += deltaTime;
-  difficultyTimer += deltaTime;
-  if (difficultyTimer > 15) {
-    bombChance = Math.min(bombChance + 0.05, 0.4);
-    difficultyTimer = 0;
-  }
-  if (bombSpawnTimer > 2.5 && Math.random() < bombChance) {
-    bombSpawnTimer = 0;
-    spawnBomb();
-  }
-  
-  // Update spider friends
+  // Check if tap is near any spider friend
+  let caught = false;
   spiderFriends.forEach(s => {
-    s.x -= s.speed;
+    if (s.caught) return;
+    const dx = x - s.x;
+    const dy = y - s.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
     
-    // Check collection
-    if (!s.collected) {
-      const dx = spider.x - s.x;
-      const dy = spider.y - s.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < spider.radius + s.radius) {
-        s.collected = true;
-        score++;
-        spawnParticles(s.x, s.y, '#ffd700', 12);
-        showFloatingText(s.x, s.y, '+1');
-        
-        // Milestone messages
-        if (score === 5) showMessage('GREAT JOB! 🎉');
-        if (score === 10) showMessage('SUPER HERO! 🦸');
-        if (score === 20) showMessage('AMAZING! ⭐');
-        if (score === 30) showMessage('INCREDIBLE! 🏆');
-      }
+    // Very generous hit area
+    if (dist < s.radius + 40) {
+      s.caught = true;
+      s.catchAnim = 0;
+      score++;
+      caught = true;
+      
+      // Web line from Spider-Man to catch
+      webs.push({ fromX: spiderman.x, fromY: spiderman.y, toX: s.x, toY: s.y, life: 1 });
+      
+      spawnCatchEffect(s.x, s.y);
+      showFloatingText(s.x, s.y - 30, `${score} 🕷️`);
+      
+      // Replace after delay
+      setTimeout(() => {
+        const idx = spiderFriends.indexOf(s);
+        if (idx > -1) spiderFriends.splice(idx, 1);
+        spawnSpiderFriend();
+      }, 800);
     }
   });
   
-  // Update bombs
-  bombs.forEach(b => {
-    b.x -= b.speed;
-    
-    // Check collision
-    if (spider.invincible <= 0) {
-      const dx = spider.x - b.x;
-      const dy = spider.y - b.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < spider.radius + b.radius) {
-        // Hit bomb - just make invincible, no lives
-        spider.invincible = 2;
-        spawnParticles(b.x, b.y, '#ff4444', 15);
-        showMessage('WATCH OUT! 💥');
-        // Remove the bomb
-        b.x = -100;
-      }
-    }
-  });
-  
-  // Cleanup off-screen objects
-  spiderFriends = spiderFriends.filter(s => s.x > -50);
-  bombs = bombs.filter(b => b.x > -50);
+  // Always show a web shot for feedback
+  if (!caught) {
+    webs.push({ fromX: spiderman.x, fromY: spiderman.y, toX: x, toY: y, life: 0.5 });
+  }
 }
 
-// Flap (tap to fly up)
-function flap() {
+// Main loop
+function gameLoop() {
   if (!gameRunning) return;
-  spider.vy = -9; // Fly up
-  spawnParticles(spider.x, spider.y + 20, 'rgba(255, 255, 255, 0.5)', 3);
-}
-
-// Main game loop
-function gameLoop(timestamp) {
-  if (!gameRunning) return;
-  
-  const deltaTime = Math.min((timestamp - lastTime) / 1000, 0.05);
-  lastTime = timestamp;
   
   drawSky();
   drawClouds();
   drawBuildings();
+  drawWebs();
   drawSpiderFriends();
-  drawBombs();
   drawParticles();
-  drawSpider();
+  drawSparkles();
+  drawSpiderMan();
   
-  update(deltaTime);
+  // Keep enough spiders on screen
+  const activeSpiders = spiderFriends.filter(s => !s.caught).length;
+  if (activeSpiders < 3) {
+    spawnSpiderFriend();
+  }
   
-  // Update HUD
   document.getElementById('hud-score').textContent = score;
   
   requestAnimationFrame(gameLoop);
 }
 
-// Event handlers
-canvas.addEventListener('mousedown', (e) => {
-  e.preventDefault();
-  flap();
-});
-
+// Events
+canvas.addEventListener('mousedown', (e) => { handleTap(e.clientX, e.clientY); });
 canvas.addEventListener('touchstart', (e) => {
   e.preventDefault();
-  flap();
+  const t = e.touches[0];
+  handleTap(t.clientX, t.clientY);
 }, { passive: false });
 
-// Start button
 document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('start-screen').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
-  document.getElementById('exit-btn').style.display = 'block';
   initGame();
   gameRunning = true;
-  lastTime = performance.now();
-  gameLoop(lastTime);
-});
-
-// Restart button
-document.getElementById('restart-btn').addEventListener('click', () => {
-  document.getElementById('game-over').style.display = 'none';
-  document.getElementById('hud').style.display = 'flex';
-  document.getElementById('exit-btn').style.display = 'block';
-  initGame();
-  gameRunning = true;
-  lastTime = performance.now();
-  gameLoop(lastTime);
-});
-
-// Exit button
-document.getElementById('exit-btn').addEventListener('click', () => {
-  gameRunning = false;
-  document.getElementById('start-screen').style.display = 'flex';
-  document.getElementById('hud').style.display = 'none';
-  document.getElementById('exit-btn').style.display = 'none';
-});
-
-// Keyboard support
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    e.preventDefault();
-    flap();
-  }
+  gameLoop();
 });
 </script>
 </body>
