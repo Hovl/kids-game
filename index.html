@@ -62,6 +62,30 @@ canvas { display: block; }
 }
 .mode-btn:hover { background: rgba(255,255,255,0.15); }
 .mode-btn.selected { border-color: #6bcb77; background: rgba(107,203,119,0.2); }
+.mode-btn.special {
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  border-color: #ff4444;
+  color: #fff;
+  animation: pulse 2s ease-in-out infinite;
+}
+.mode-btn.special:hover { transform: scale(1.05); }
+
+/* Alexey Jr. Games Section */
+.alexey-games {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.alexey-games.show { display: flex; }
+.alexey-games .games-title {
+  font-size: 18px; font-weight: 700; color: #ffd93d;
+  text-shadow: 0 0 10px rgba(255,215,0,0.5);
+}
+.alexey-games .games-subtitle {
+  font-size: 14px; color: #b088d0;
+}
 
 #start-btn {
   font-size: 32px; font-weight: 800; padding: 16px 50px; border: none;
@@ -214,10 +238,23 @@ canvas { display: block; }
     </div>
   </div>
 
-  <div class="mode-select">
+  <!-- Standard modes (for Sophia & Paulina) -->
+  <div class="mode-select" id="standard-modes">
     <div class="mode-btn selected" data-mode="pop">Bubble Pop</div>
     <div class="mode-btn" data-mode="russian">Russian ABC</div>
     <div class="mode-btn" data-mode="swim">Swim Race</div>
+  </div>
+
+  <!-- Alexey Jr. special games -->
+  <div class="alexey-games" id="alexey-games">
+    <div class="games-title">🦸 Alexey Jr.'s Games</div>
+    <div class="games-subtitle">Tap to play!</div>
+    <div class="mode-select">
+      <a href="superheroes.html" class="mode-btn special" style="text-decoration: none; display: inline-block;">
+        🦇 Super Heroes: Colors & Counting!
+      </a>
+    </div>
+    <div class="games-subtitle">Learn colors, counting & shapes with Spider-Man & Batman!</div>
   </div>
 
   <button id="start-btn">PLAY!</button>
@@ -383,12 +420,24 @@ const COLORS = [
   { fill: '#38bdf8', glow: 'rgba(56,189,248,0.4)' },
 ];
 
-// Character select
+// Character select - show/hide Alexey Jr. games
 document.querySelectorAll('.char-card').forEach(card => {
   card.addEventListener('click', () => {
     document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     selectedChar = card.dataset.char;
+    
+    // Show/hide Alexey Jr. special games
+    const alexeyGames = document.getElementById('alexey-games');
+    const standardModes = document.getElementById('standard-modes');
+    
+    if (selectedChar === 'alexey') {
+      alexeyGames.classList.add('show');
+      standardModes.style.display = 'none';
+    } else {
+      alexeyGames.classList.remove('show');
+      standardModes.style.display = 'flex';
+    }
   });
 });
 
@@ -419,13 +468,11 @@ class Bubble {
     this.special = null;
 
     if (selectedMode === 'russian') {
-      // Russian letter bubble
       const letterData = RUSSIAN_LETTERS[Math.floor(Math.random() * RUSSIAN_LETTERS.length)];
       this.content = letterData;
       this.r += 8;
-      this.vy *= 0.7; // Slower for learning
+      this.vy *= 0.7;
     } else if (selectedMode === 'swim') {
-      // Swim mode: obstacles and coins
       this.isObstacle = Math.random() < 0.3;
       if (this.isObstacle) {
         this.r = 20;
@@ -435,7 +482,6 @@ class Bubble {
         this.content = { emoji: ['🐚', '⭐', '💎', '🫧'][Math.floor(Math.random() * 4)] };
       }
     } else {
-      // Regular pop mode with special bubbles
       if (Math.random() < 0.15) {
         this.special = { emoji: ['🌟', '💖', '🌈', '🎉', '🦄'][Math.floor(Math.random() * 5)], points: 25 };
         this.r += 10;
@@ -466,14 +512,12 @@ class Bubble {
       return;
     }
 
-    // Glow
     const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 1.5);
     grad.addColorStop(0, this.color.glow);
     grad.addColorStop(1, 'transparent');
     ctx.fillStyle = grad;
     ctx.fillRect(this.x - this.r * 1.5, this.y - this.r * 1.5, this.r * 3, this.r * 3);
 
-    // Body
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
     const bodyGrad = ctx.createRadialGradient(this.x - this.r * 0.3, this.y - this.r * 0.3, 0, this.x, this.y, this.r);
@@ -483,351 +527,269 @@ class Bubble {
     ctx.fillStyle = bodyGrad;
     ctx.fill();
 
-    // Shine
     ctx.beginPath();
     ctx.arc(this.x - this.r * 0.25, this.y - this.r * 0.25, this.r * 0.15, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.fill();
 
-    // Content
     if (this.content) {
       if (selectedMode === 'russian') {
-        // Big letter
         ctx.font = `bold ${this.r * 1.1}px 'Segoe UI', sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#fff';
         ctx.fillText(this.content.letter, this.x, this.y - 5);
-        // Small emoji
-        ctx.font = `${this.r * 0.4}px serif`;
-        ctx.fillText(this.content.emoji, this.x, this.y + this.r * 0.4);
-      } else {
-        ctx.font = `${this.r * 0.8}px serif`;
+      } else if (selectedMode === 'swim') {
+        ctx.font = `${this.r * 1.2}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(this.content.emoji, this.x, this.y);
       }
     }
+
     if (this.special) {
-      ctx.font = `${this.r * 0.7}px serif`;
+      ctx.font = `${this.r * 1.0}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(this.special.emoji, this.x, this.y);
     }
   }
 
-  contains(px, py) {
-    return (px - this.x) ** 2 + (py - this.y) ** 2 <= this.r ** 2;
-  }
+  pop() {
+    this.popping = true;
+    this.popFrame = 0;
+    const points = this.special ? this.special.points : 10;
+    score += Math.floor(points * (1 + combo * 0.1));
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    totalPopped++;
 
-  pop() { this.popping = true; this.popFrame = 0; }
-}
+    if (selectedMode === 'russian' && this.content) {
+      lettersLearned.add(this.content.letter);
+    }
 
-class Particle {
-  constructor(x, y, color) {
-    this.x = x; this.y = y;
-    this.vx = (Math.random() - 0.5) * 12;
-    this.vy = (Math.random() - 0.5) * 12;
-    this.r = Math.random() * 6 + 2;
-    this.color = color;
-    this.life = 1;
-    this.decay = Math.random() * 0.03 + 0.02;
-  }
-  update() { this.x += this.vx; this.y += this.vy; this.vy += 0.15; this.life -= this.decay; return this.life <= 0; }
-  draw() { ctx.globalAlpha = this.life; ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); ctx.globalAlpha = 1; }
-}
+    for (let i = 0; i < 8; i++) {
+      particles.push({
+        x: this.x, y: this.y,
+        vx: (Math.random() - 0.5) * 8,
+        vy: (Math.random() - 0.5) * 8,
+        r: Math.random() * 4 + 2,
+        color: this.color.fill,
+        life: 1
+      });
+    }
 
-function spawnBubble() { bubbles.push(new Bubble()); }
-
-function popEffect(x, y, color, points) {
-  for (let i = 0; i < 12; i++) particles.push(new Particle(x, y, color.fill));
-  const ft = document.createElement('div');
-  ft.className = 'float-text';
-  ft.textContent = `+${points}`;
-  ft.style.left = x + 'px'; ft.style.top = y + 'px';
-  document.body.appendChild(ft);
-  setTimeout(() => ft.remove(), 1000);
-  if (combo >= 3) {
-    const sb = document.createElement('div');
-    sb.className = 'star-burst';
-    sb.textContent = combo >= 10 ? '🔥' : combo >= 5 ? '⚡' : '✨';
-    sb.style.left = (x - 20) + 'px'; sb.style.top = (y - 20) + 'px';
-    document.body.appendChild(sb);
-    setTimeout(() => sb.remove(), 800);
-  }
-}
-
-function showLetterPopup(letterData) {
-  const lp = document.createElement('div');
-  lp.className = 'letter-popup';
-  lp.innerHTML = `${letterData.emoji}<br><span style="font-size:80px">${letterData.letter}</span><div class="letter-name">${letterData.word}</div>`;
-  lp.style.left = '50%'; lp.style.top = '40%'; lp.style.transform = 'translate(-50%, -50%)';
-  document.body.appendChild(lp);
-  setTimeout(() => lp.remove(), 1500);
-  // Speak the Russian word
-  speakRussian(letterData.letter, letterData.word);
-}
-
-function speakRussian(letter, word) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  // Speak the word only (avoids "заглавная буква" prefix on single letters)
-  const wordUtter = new SpeechSynthesisUtterance(word);
-  wordUtter.lang = 'ru-RU';
-  wordUtter.rate = 0.75;
-  wordUtter.pitch = 1.1;
-  window.speechSynthesis.speak(wordUtter);
-}
-
-function handleClick(x, y) {
-  if (!gameRunning) return;
-  let hit = false;
-
-  for (let i = bubbles.length - 1; i >= 0; i--) {
-    const b = bubbles[i];
-    if (!b.popping && b.contains(x, y)) {
-      if (selectedMode === 'swim' && b.isObstacle) {
-        // Hit obstacle = lose life
-        lives--;
-        combo = 0;
-        b.pop();
-        updateHUD();
-        if (lives <= 0) endGame();
-        return;
-      }
-
-      b.pop();
-      hit = true;
-      combo++;
-      totalPopped++;
-      if (combo > maxCombo) maxCombo = combo;
-
-      let points = 10;
-      if (b.special) points = b.special.points;
-      if (selectedMode === 'russian' && b.content) {
-        points = 15;
-        lettersLearned.add(b.content.letter);
-        showLetterPopup(b.content);
-      }
-      if (selectedMode === 'swim') points = 12;
-
-      points = Math.floor(points * (1 + Math.min(combo, 20) * 0.1));
-      score += points;
-
-      popEffect(b.x, b.y, b.color, points);
-      playPop(500 + combo * 40);
-      if (combo >= 3) playComboSound(combo);
-      updateHUD();
-      break;
+    if (combo > 1 && combo % 5 === 0) {
+      playComboSound(combo);
+      const el = document.getElementById('combo-display');
+      el.textContent = `${combo}x Combo!`;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1000);
     }
   }
-
-  if (!hit) {
-    combo = 0;
-    document.getElementById('combo-display').classList.remove('show');
-  }
 }
 
-canvas.addEventListener('pointerdown', e => { e.preventDefault(); handleClick(e.clientX, e.clientY); });
-canvas.addEventListener('touchstart', e => { e.preventDefault(); for (const t of e.touches) handleClick(t.clientX, t.clientY); }, { passive: false });
-
-function updateHUD() {
-  const char = CHARACTERS[selectedChar];
-  document.getElementById('hud-name').textContent = char.name;
-  document.getElementById('hud-score').textContent = score;
-  document.getElementById('hud-level').textContent = `Level ${level}`;
-  document.getElementById('hud-best').textContent = bestScores[selectedMode];
-  let hearts = '';
-  for (let i = 0; i < 5; i++) hearts += i < lives ? '❤️' : '🖤';
-  document.getElementById('hud-lives').textContent = hearts;
-
-  const cd = document.getElementById('combo-display');
-  if (combo >= 2) { cd.textContent = `${combo}x COMBO!`; cd.classList.add('show'); }
-  else cd.classList.remove('show');
+function spawnBubble() {
+  if (selectedMode === 'swim') {
+    swimDistance += 0.1;
+    if (Math.random() < 0.05 + level * 0.02) bubbles.push(new Bubble());
+  } else {
+    spawnTimer++;
+    const interval = Math.max(20, 60 - level * 3);
+    if (spawnTimer >= interval) {
+      spawnTimer = 0;
+      bubbles.push(new Bubble());
+    }
+  }
 }
 
 function drawBackground() {
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   if (selectedMode === 'swim') {
-    grad.addColorStop(0, '#001a33');
-    grad.addColorStop(0.5, '#003366');
-    grad.addColorStop(1, '#004080');
+    grad.addColorStop(0, '#006994');
+    grad.addColorStop(1, '#001a33');
   } else {
     grad.addColorStop(0, '#0a001a');
-    grad.addColorStop(0.3, '#1a0533');
-    grad.addColorStop(0.6, '#2d1b69');
-    grad.addColorStop(1, '#4a2c8a');
+    grad.addColorStop(0.5, '#1a0533');
+    grad.addColorStop(1, '#2d1b69');
   }
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  const time = Date.now() * 0.001;
-  for (const s of bgStars) {
-    ctx.globalAlpha = 0.2 + Math.sin(time + s.twinkle) * 0.2;
+  bgStars.forEach(s => {
+    s.twinkle += 0.02;
+    const alpha = 0.3 + Math.sin(s.twinkle) * 0.3;
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
     ctx.beginPath();
     ctx.arc(s.x % W, s.y % H, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = selectedMode === 'swim' ? '#4488cc' : '#fff';
     ctx.fill();
-  }
-  ctx.globalAlpha = 1;
+  });
 }
 
-let lastTime = 0;
-function gameLoop(time) {
+function drawParticles() {
+  particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.1;
+    p.life -= 0.02;
+    if (p.life <= 0) { particles.splice(i, 1); return; }
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+}
+
+function gameLoop() {
   if (!gameRunning) return;
-  const dt = Math.min(time - lastTime, 50);
-  lastTime = time;
 
   drawBackground();
+  spawnBubble();
 
-  // Spawn
-  spawnTimer += dt;
-  let interval = selectedMode === 'russian' ? 1800 : selectedMode === 'swim' ? 800 : Math.max(400, 1200 - level * 80);
-  if (spawnTimer > interval) {
-    spawnTimer = 0;
-    spawnBubble();
-    if (level >= 3 && Math.random() < 0.3) spawnBubble();
-  }
-
-  // Difficulty
-  difficultyTimer += dt;
-  if (difficultyTimer > 20000) {
-    difficultyTimer = 0;
-    level++;
-    if (level % 3 === 0 && lives < 5) lives++;
-    updateHUD();
-  }
-
-  // Update bubbles
-  for (let i = bubbles.length - 1; i >= 0; i--) {
-    const shouldRemove = bubbles[i].update();
-    bubbles[i].draw();
+  bubbles.forEach((b, i) => {
+    const shouldRemove = b.update();
     if (shouldRemove) {
-      if (!bubbles[i].alive && !bubbles[i].popping) {
-        if (selectedMode !== 'swim' || !bubbles[i].isObstacle) {
-          lives--;
-          combo = 0;
-          updateHUD();
-          if (lives <= 0) { endGame(); return; }
-        }
+      if (!b.popping && b.alive === false && selectedMode !== 'swim') {
+        lives--;
+        combo = 0;
       }
       bubbles.splice(i, 1);
     }
-  }
+    b.draw();
+  });
 
-  // Particles
-  for (let i = particles.length - 1; i >= 0; i--) {
-    if (particles[i].update()) particles.splice(i, 1);
-    else particles[i].draw();
-  }
+  drawParticles();
 
-  // Swim mode: draw swimmer
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-level').textContent = `Level ${level}`;
+  document.getElementById('hud-best').textContent = bestScores[selectedMode] || 0;
+  let hearts = '';
+  for (let i = 0; i < lives; i++) hearts += '❤️';
+  document.getElementById('hud-lives').textContent = hearts;
+  document.getElementById('hud-name').textContent = CHARACTERS[selectedChar].name;
+
   if (selectedMode === 'swim') {
-    swimDistance += dt * 0.01;
-    ctx.font = '40px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🏊', W / 2, H - 80);
-    ctx.font = '14px sans-serif';
-    ctx.fillStyle = '#4488cc';
-    ctx.fillText(`${Math.floor(swimDistance)}m`, W / 2, H - 45);
+    document.getElementById('hud-level').textContent = `${Math.floor(swimDistance)}m`;
   }
 
-  // Draw character avatar in corner
-  ctx.font = '30px serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(CHARACTERS[selectedChar].emoji, 15, H - 20);
+  difficultyTimer++;
+  if (difficultyTimer >= 600) {
+    difficultyTimer = 0;
+    level++;
+  }
+
+  if (lives <= 0) {
+    gameRunning = false;
+    if (score > (bestScores[selectedMode] || 0)) {
+      bestScores[selectedMode] = score;
+      try { localStorage.setItem('dubov_best', JSON.stringify(bestScores)); } catch(e) {}
+    }
+    document.getElementById('go-score').textContent = score;
+    document.getElementById('go-stats').innerHTML = `Level: ${level}<br>Bubbles popped: ${totalPopped}<br>Best combo: ${maxCombo}x`;
+    if (selectedMode === 'russian' && lettersLearned.size > 0) {
+      document.getElementById('go-learned').textContent = `Letters learned: ${[...lettersLearned].join(', ')}`;
+    }
+    document.getElementById('game-over').style.display = 'flex';
+    document.getElementById('exit-btn').style.display = 'none';
+  }
 
   requestAnimationFrame(gameLoop);
 }
 
-function startGame() {
+// Tap/click
+canvas.addEventListener('mousedown', (e) => {
+  if (!gameRunning) return;
   initAudio();
-  const char = CHARACTERS[selectedChar];
-  score = 0; combo = 0; maxCombo = 0; level = 1; totalPopped = 0; lives = 5;
-  bubbles = []; particles = []; spawnTimer = 0; difficultyTimer = 0;
-  lettersLearned = new Set(); swimDistance = 0;
-  gameRunning = true;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    const dx = x - b.x;
+    const dy = y - b.y;
+    if (dx * dx + dy * dy < b.r * b.r) {
+      b.pop();
+      playPop(600 + combo * 50);
+      return;
+    }
+  }
+  combo = 0;
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  if (!gameRunning) return;
+  e.preventDefault();
+  initAudio();
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const x = t.clientX - rect.left;
+  const y = t.clientY - rect.top;
+
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    const dx = x - b.x;
+    const dy = y - b.y;
+    if (dx * dx + dy * dy < b.r * b.r) {
+      b.pop();
+      playPop(600 + combo * 50);
+      return;
+    }
+  }
+  combo = 0;
+}, { passive: false });
+
+// Start
+document.getElementById('start-btn').addEventListener('click', () => {
+  // If Alexey Jr. is selected, don't start the bubble game - the link handles it
+  if (selectedChar === 'alexey') return;
+  
   document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('exit-btn').style.display = 'block';
+  document.getElementById('mode-label').textContent = selectedMode === 'russian' ? 'Russian ABC' : selectedMode === 'swim' ? 'Swim Race' : 'Bubble Pop';
+  lives = 5;
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  level = 1;
+  totalPopped = 0;
+  bubbles = [];
+  particles = [];
+  lettersLearned = new Set();
+  swimDistance = 0;
+  gameRunning = true;
+  gameLoop();
+});
+
+// Restart
+document.getElementById('restart-btn').addEventListener('click', () => {
   document.getElementById('game-over').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
   document.getElementById('exit-btn').style.display = 'block';
-  document.getElementById('mode-label').textContent =
-    selectedMode === 'russian' ? 'Pop Russian letters to learn the alphabet!' :
-    selectedMode === 'swim' ? 'Swim and collect treasures! Avoid sea creatures!' :
-    'Pop bubbles before they escape!';
+  lives = 5;
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  level = 1;
+  totalPopped = 0;
+  bubbles = [];
+  particles = [];
+  lettersLearned = new Set();
+  swimDistance = 0;
+  gameRunning = true;
+  gameLoop();
+});
 
-  updateHUD();
-  lastTime = performance.now();
-  requestAnimationFrame(gameLoop);
-}
-
-function endGame() {
-  gameRunning = false;
-  document.getElementById('exit-btn').style.display = 'none';
-  if (score > bestScores[selectedMode]) {
-    bestScores[selectedMode] = score;
-    try { localStorage.setItem('dubov_best', JSON.stringify(bestScores)); } catch(e) {}
-  }
-
-  const char = CHARACTERS[selectedChar];
-  document.getElementById('go-title').textContent = `${char.name} did great!`;
-  document.getElementById('go-score').textContent = score;
-
-  let stats = `Bubbles popped: ${totalPopped} | Best combo: ${maxCombo}x | Level: ${level}`;
-  if (selectedMode === 'swim') stats += ` | Distance: ${Math.floor(swimDistance)}m`;
-  document.getElementById('go-stats').textContent = stats;
-
-  if (selectedMode === 'russian' && lettersLearned.size > 0) {
-    document.getElementById('go-learned').textContent =
-      `Letters learned: ${[...lettersLearned].sort().join(' ')} (${lettersLearned.size}/${RUSSIAN_LETTERS.length})`;
-  } else {
-    document.getElementById('go-learned').textContent = '';
-  }
-
-  document.getElementById('game-over').style.display = 'flex';
-}
-
-document.getElementById('start-btn').addEventListener('click', startGame);
-document.getElementById('restart-btn').addEventListener('click', startGame);
-
-// Exit button - go back to start screen
+// Exit
 document.getElementById('exit-btn').addEventListener('click', () => {
   gameRunning = false;
+  document.getElementById('start-screen').style.display = 'flex';
   document.getElementById('hud').style.display = 'none';
   document.getElementById('exit-btn').style.display = 'none';
-  document.getElementById('game-over').style.display = 'none';
-  document.getElementById('start-screen').style.display = 'flex';
-  animateStart();
 });
-
-// View Results button - show detailed results
-document.getElementById('view-results-btn').addEventListener('click', () => {
-  const char = CHARACTERS[selectedChar];
-  let resultText = `${char.name}'s Results:\n\n`;
-  resultText += `Score: ${score}\n`;
-  resultText += `Level: ${level}\n`;
-  resultText += `Bubbles popped: ${totalPopped}\n`;
-  resultText += `Best combo: ${maxCombo}x\n`;
-  resultText += `Best score ever: ${bestScores[selectedMode]}\n`;
-  if (selectedMode === 'swim') resultText += `Distance: ${Math.floor(swimDistance)}m\n`;
-  if (selectedMode === 'russian' && lettersLearned.size > 0) {
-    resultText += `\nRussian letters learned (${lettersLearned.size}/${RUSSIAN_LETTERS.length}):\n`;
-    resultText += [...lettersLearned].sort().join(' ');
-  }
-  if (score >= bestScores[selectedMode] && score > 0) {
-    resultText += `\n\nNEW RECORD!`;
-  }
-  alert(resultText);
-});
-
-// Animate start screen background
-function animateStart() {
-  if (gameRunning) return;
-  drawBackground();
-  requestAnimationFrame(animateStart);
-}
-animateStart();
 </script>
 </body>
 </html>
