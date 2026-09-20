@@ -238,11 +238,23 @@ canvas { display: block; }
     </div>
   </div>
 
-  <!-- Standard modes (for Sophia & Paulina) -->
+  <!-- Standard modes (for Paulina) -->
   <div class="mode-select" id="standard-modes">
     <div class="mode-btn selected" data-mode="pop">Bubble Pop</div>
     <div class="mode-btn" data-mode="russian">Russian ABC</div>
     <div class="mode-btn" data-mode="swim">Swim Race</div>
+  </div>
+
+  <!-- Sophia special games -->
+  <div class="alexey-games" id="sophia-games">
+    <div class="games-title">👸 Sophia's Games</div>
+    <div class="games-subtitle">Learn while you play!</div>
+    <div class="mode-select">
+      <a href="sophia-climb.html" class="mode-btn special" style="text-decoration: none; display: inline-block; background: linear-gradient(135deg, #ff6b9d, #ff4488);">
+        🌈 Color Climb
+      </a>
+    </div>
+    <div class="games-subtitle">Climb the rainbow tower! Learn colors, numbers & shapes!</div>
   </div>
 
   <!-- Alexey Jr. special games -->
@@ -427,15 +439,22 @@ document.querySelectorAll('.char-card').forEach(card => {
     card.classList.add('selected');
     selectedChar = card.dataset.char;
     
-    // Show/hide Alexey Jr. special games
+    // Show/hide character-specific games
     const alexeyGames = document.getElementById('alexey-games');
+    const sophiaGames = document.getElementById('sophia-games');
     const standardModes = document.getElementById('standard-modes');
-    
+
     if (selectedChar === 'alexey') {
       alexeyGames.classList.add('show');
+      sophiaGames.classList.remove('show');
+      standardModes.style.display = 'none';
+    } else if (selectedChar === 'sophia') {
+      alexeyGames.classList.remove('show');
+      sophiaGames.classList.add('show');
       standardModes.style.display = 'none';
     } else {
       alexeyGames.classList.remove('show');
+      sophiaGames.classList.remove('show');
       standardModes.style.display = 'flex';
     }
   });
