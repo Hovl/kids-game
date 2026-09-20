@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Spider-Man: Web Swing!</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  height: 100vh;
+  width: 100vw;
+  background: #0a0a2e;
+}
+canvas { display: block; }
+
+/* Start Screen */
+#start-screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 100;
+  background: linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #2d0a3e 100%);
+}
+#start-screen h1 {
+  font-size: 48px; font-weight: 900;
+  background: linear-gradient(135deg, #ff0000, #ff4444, #ffffff);
+  background-size: 300% 300%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: gradient 3s ease infinite;
+  text-align: center; line-height: 1.2;
+  text-shadow: 0 0 40px rgba(255,0,0,0.3);
+}
+@keyframes gradient { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+.subtitle { font-size: 20px; color: #ff8888; margin: 10px 0 30px; text-align: center; }
+
+.hero-display {
+  font-size: 120px;
+  margin: 20px 0;
+  animation: heroBounce 2s ease-in-out infinite;
+}
+@keyframes heroBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+
+.hero-name {
+  font-size: 28px; font-weight: 900; color: #ff4444;
+  margin-bottom: 30px;
+  text-shadow: 0 0 20px rgba(255,0,0,0.5);
+}
+
+.instructions {
+  color: #aaa; font-size: 16px; text-align: center; margin-bottom: 30px;
+  line-height: 1.6; max-width: 350px;
+}
+.instructions span { color: #ff4444; font-weight: 700; }
+
+#start-btn {
+  font-size: 32px; font-weight: 800; padding: 16px 50px; border: none;
+  border-radius: 50px; background: linear-gradient(135deg, #ff0000, #cc0000);
+  color: white; cursor: pointer; pointer-events: auto;
+  box-shadow: 0 8px 30px rgba(255,0,0,0.4);
+  transition: transform 0.2s; animation: pulse 2s ease-in-out infinite;
+}
+#start-btn:hover { transform: scale(1.08); }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+/* HUD */
+#hud {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: none; justify-content: space-between; align-items: flex-start;
+  padding: 12px 20px; z-index: 10; pointer-events: none;
+}
+#hud .left, #hud .center, #hud .right { display: flex; flex-direction: column; align-items: center; }
+#hud .hero-label { font-size: 14px; font-weight: 700; color: #ff4444; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
+#hud .score-display { font-size: 28px; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+#hud .level-display { font-size: 16px; color: #ffaa44; font-weight: 600; }
+#hud .lives-display { font-size: 20px; margin-top: 2px; }
+#combo-display {
+  position: fixed; top: 50px; left: 50%; transform: translateX(-50%);
+  font-size: 24px; font-weight: 900; color: #ff4444;
+  text-shadow: 0 0 15px rgba(255,0,0,0.6);
+  opacity: 0; transition: opacity 0.3s; z-index: 10; pointer-events: none;
+}
+#combo-display.show { opacity: 1; }
+
+/* Game Over */
+#game-over {
+  position: fixed; inset: 0; display: none; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 100;
+  background: rgba(10,0,30,0.92); backdrop-filter: blur(10px);
+}
+#game-over h2 { font-size: 48px; font-weight: 900; color: #ff4444; text-shadow: 0 0 30px rgba(255,0,0,0.5); }
+#game-over .final-score { font-size: 64px; font-weight: 900; color: #fff; margin: 10px 0; }
+#game-over .stats { font-size: 18px; color: #ff8888; margin-bottom: 25px; text-align: center; line-height: 1.6; }
+#restart-btn {
+  font-size: 26px; font-weight: 800; padding: 14px 45px; border: none;
+  border-radius: 50px; background: linear-gradient(135deg, #ff0000, #cc0000);
+  color: white; cursor: pointer; pointer-events: auto;
+  box-shadow: 0 8px 30px rgba(255,0,0,0.4); transition: transform 0.2s;
+}
+#restart-btn:hover { transform: scale(1.08); }
+
+/* Exit button */
+#exit-btn {
+  position: fixed; bottom: 15px; right: 15px; z-index: 15;
+  font-size: 14px; font-weight: 700; padding: 8px 18px;
+  border: 2px solid rgba(255,255,255,0.3); border-radius: 25px;
+  background: rgba(255,255,255,0.1); color: #fff;
+  cursor: pointer; pointer-events: auto;
+  backdrop-filter: blur(5px); transition: all 0.2s;
+  display: none;
+}
+#exit-btn:hover { background: rgba(255,100,100,0.3); border-color: #ff6b6b; }
+
+/* Floating effects */
+.float-text {
+  position: fixed; pointer-events: none; z-index: 50;
+  font-size: 28px; font-weight: 900; color: #ff4444;
+  text-shadow: 0 0 10px rgba(255,0,0,0.8);
+  animation: floatUp 1s ease-out forwards;
+}
+@keyframes floatUp { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-80px) scale(1.5);opacity:0} }
+
+.star-burst {
+  position: fixed; pointer-events: none; z-index: 50;
+  font-size: 40px; animation: starPop 0.8s ease-out forwards;
+}
+@keyframes starPop { 0%{transform:scale(0) rotate(0deg);opacity:1} 50%{transform:scale(1.5) rotate(180deg);opacity:1} 100%{transform:scale(0) rotate(360deg);opacity:0} }
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+  <h1>Spider-Man:<br>Web Swing!</h1>
+  <div class="subtitle">Swing through the city, hero!</div>
+  
+  <div class="hero-display">🕷️</div>
+  <div class="hero-name">SPIDER-MAN</div>
+  
+  <div class="instructions">
+    <span>Tap or click</span> to shoot a web and swing!<br>
+    <span>Release</span> to let go and fall!<br>
+    Collect <span>🕷️ tokens</span> and avoid <span>💥 obstacles</span>!<br>
+    The longer you swing, the faster you go!
+  </div>
+  
+  <button id="start-btn">SWING!</button>
+</div>
+
+<div id="hud">
+  <div class="left">
+    <div class="hero-label">🕷️ SPIDER-MAN</div>
+    <div class="lives-display" id="hud-lives">❤️❤️❤️❤️❤️</div>
+  </div>
+  <div class="center">
+    <div class="score-display" id="hud-score">0</div>
+    <div class="level-display" id="hud-level">Level 1</div>
+  </div>
+  <div class="right">
+    <div style="font-size:14px;color:#ffaa44;">Best</div>
+    <div class="score-display" id="hud-best" style="font-size:22px;">0</div>
+  </div>
+</div>
+<div id="combo-display"></div>
+
+<canvas id="canvas"></canvas>
+
+<div id="game-over">
+  <h2 id="go-title">Great Swinging!</h2>
+  <div class="final-score" id="go-score">0</div>
+  <div class="stats" id="go-stats"></div>
+  <button id="restart-btn">Swing Again!</button>
+</div>
+
+<button id="exit-btn">✕ Exit</button>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// Game state
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+let level = 1;
+let lives = 5;
+let gameRunning = false;
+let bestScore = parseInt(localStorage.getItem('spiderman_best') || '0');
+
+// Spider-Man (the player)
+let spider = {
+  x: 0, y: 0,
+  vx: 0, vy: 0,
+  radius: 20,
+  swinging: false,
+  webAnchor: null,
+  webLength: 0,
+  angle: 0,
+  angularVel: 0,
+  trail: [],
+  invincible: 0
+};
+
+// Game objects
+let buildings = [];
+let collectibles = [];
+let obstacles = [];
+let particles = [];
+let webs = [];
+let clouds = [];
+let stars = [];
+
+// Web swing mechanics
+let isMouseDown = false;
+let touchStartY = 0;
+
+// Initialize game
+function initGame() {
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  level = 1;
+  lives = 5;
+  
+  spider.x = W * 0.3;
+  spider.y = H * 0.4;
+  spider.vx = 3;
+  spider.vy = 0;
+  spider.swinging = false;
+  spider.webAnchor = null;
+  spider.trail = [];
+  spider.invincible = 0;
+  
+  buildings = [];
+  collectibles = [];
+  obstacles = [];
+  particles = [];
+  webs = [];
+  clouds = [];
+  stars = [];
+  
+  // Generate initial buildings
+  generateBuildings();
+  
+  // Generate initial collectibles and obstacles
+  generateObjects();
+  
+  // Generate clouds and stars
+  for (let i = 0; i < 15; i++) {
+    clouds.push({
+      x: Math.random() * W * 2,
+      y: Math.random() * H * 0.4,
+      size: 30 + Math.random() * 60,
+      speed: 0.5 + Math.random() * 1
+    });
+  }
+  for (let i = 0; i < 50; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H * 0.6,
+      size: 1 + Math.random() * 2,
+      twinkle: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function generateBuildings() {
+  let x = buildings.length ? buildings[buildings.length - 1].x + buildings[buildings.length - 1].w + 80 : W;
+  while (x < W * 3) {
+    const w = 60 + Math.random() * 100;
+    const h = 150 + Math.random() * 300;
+    buildings.push({
+      x, w, h,
+      color: `hsl(${220 + Math.random() * 20}, ${20 + Math.random() * 20}%, ${15 + Math.random() * 15}%)`,
+      windows: Math.floor(h / 40)
+    });
+    x += w + 80 + Math.random() * 120;
+  }
+}
+
+function generateObjects() {
+  let x = collectibles.length ? Math.max(...collectibles.map(c => c.x), ...obstacles.map(o => o.x)) + 200 : W * 0.5;
+  while (x < W * 3) {
+    // Collectible (spider token)
+    if (Math.random() < 0.7) {
+      collectibles.push({
+        x: x + Math.random() * 100,
+        y: H * 0.2 + Math.random() * H * 0.5,
+        radius: 15,
+        collected: false,
+        bobPhase: Math.random() * Math.PI * 2
+      });
+    }
+    // Obstacle (bomb/danger)
+    if (Math.random() < 0.3 + level * 0.05) {
+      obstacles.push({
+        x: x + Math.random() * 150,
+        y: H * 0.3 + Math.random() * H * 0.4,
+        radius: 20,
+        type: Math.random() < 0.5 ? 'bomb' : 'electric'
+      });
+    }
+    x += 150 + Math.random() * 200;
+  }
+}
+
+// Draw functions
+function drawSky() {
+  const gradient = ctx.createLinearGradient(0, 0, 0, H);
+  gradient.addColorStop(0, '#0a0a2e');
+  gradient.addColorStop(0.5, '#1a1a4e');
+  gradient.addColorStop(1, '#2d0a3e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawStars() {
+  stars.forEach(s => {
+    s.twinkle += 0.02;
+    const alpha = 0.3 + Math.sin(s.twinkle) * 0.3;
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawClouds() {
+  clouds.forEach(c => {
+    c.x -= c.speed;
+    if (c.x < -c.size * 2) c.x = W + c.size;
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(c.x - c.size * 0.5, c.y + c.size * 0.2, c.size * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(c.x + c.size * 0.4, c.y + c.size * 0.15, c.size * 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawBuildings() {
+  buildings.forEach(b => {
+    // Building body
+    ctx.fillStyle = b.color;
+    ctx.fillRect(b.x, H - b.h, b.w, b.h);
+    
+    // Windows
+    const windowSize = 8;
+    const windowGap = 15;
+    for (let row = 0; row < b.windows; row++) {
+      for (let col = 0; col < Math.floor(b.w / windowGap) - 1; col++) {
+        const wx = b.x + 10 + col * windowGap;
+        const wy = H - b.h + 15 + row * 40;
+        const lit = Math.random() > 0.3;
+        ctx.fillStyle = lit ? 'rgba(255, 200, 100, 0.6)' : 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(wx, wy, windowSize, windowSize * 1.3);
+      }
+    }
+  });
+}
+
+function drawSpider() {
+  const x = spider.x;
+  const y = spider.y;
+  
+  // Trail
+  spider.trail.push({ x, y });
+  if (spider.trail.length > 15) spider.trail.shift();
+  
+  ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  spider.trail.forEach((p, i) => {
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.stroke();
+  
+  // Web line
+  if (spider.swinging && spider.webAnchor) {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(spider.webAnchor.x, spider.webAnchor.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Web anchor point
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.beginPath();
+    ctx.arc(spider.webAnchor.x, spider.webAnchor.y, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Invincibility flash
+  if (spider.invincible > 0 && Math.floor(spider.invincible * 10) % 2 === 0) return;
+  
+  // Spider-Man body
+  ctx.save();
+  ctx.translate(x, y);
+  
+  // Body (red and blue)
+  ctx.fillStyle = '#cc0000';
+  ctx.beginPath();
+  ctx.arc(0, 0, spider.radius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Blue lower half
+  ctx.fillStyle = '#0044cc';
+  ctx.beginPath();
+  ctx.arc(0, 0, spider.radius, 0, Math.PI);
+  ctx.fill();
+  
+  // Web pattern on head
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(Math.cos(angle) * spider.radius, Math.sin(angle) * spider.radius);
+    ctx.stroke();
+  }
+  
+  // Eyes (white with black outline)
+  const eyeAngle = 0.4;
+  const eyeDist = 8;
+  // Left eye
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(-Math.cos(eyeAngle) * eyeDist, -Math.sin(eyeAngle) * eyeDist, 6, 8, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Right eye
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(Math.cos(eyeAngle) * eyeDist, -Math.sin(eyeAngle) * eyeDist, 6, 8, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function drawCollectibles() {
+  collectibles.forEach(c => {
+    if (c.collected) return;
+    c.bobPhase += 0.05;
+    const bobY = Math.sin(c.bobPhase) * 5;
+    
+    // Glow
+    ctx.fillStyle = 'rgba(255, 200, 0, 0.2)';
+    ctx.beginPath();
+    ctx.arc(c.x, c.y + bobY, c.radius + 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Token
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(c.x, c.y + bobY, c.radius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Spider symbol
+    ctx.fillStyle = '#000';
+    ctx.font = '16px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🕷️', c.x, c.y + bobY);
+  });
+}
+
+function drawObstacles() {
+  obstacles.forEach(o => {
+    if (o.type === 'bomb') {
+      // Bomb
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.radius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Fuse
+      ctx.strokeStyle = '#666';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(o.x, o.y - o.radius);
+      ctx.quadraticCurveTo(o.x + 10, o.y - o.radius - 15, o.x + 5, o.y - o.radius - 20);
+      ctx.stroke();
+      
+      // Spark
+      ctx.fillStyle = '#ff4400';
+      ctx.beginPath();
+      ctx.arc(o.x + 5, o.y - o.radius - 20, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Electric
+      ctx.fillStyle = 'rgba(0, 200, 255, 0.3)';
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.radius + 5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#00ccff';
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.radius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Lightning bolt
+      ctx.fillStyle = '#fff';
+      ctx.font = '20px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚡', o.x, o.y);
+    }
+  });
+}
+
+function drawParticles() {
+  particles.forEach((p, i) => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= 0.02;
+    p.vy += 0.1;
+    
+    if (p.life <= 0) {
+      particles.splice(i, 1);
+      return;
+    }
+    
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+}
+
+function spawnParticles(x, y, color, count) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 8,
+      vy: (Math.random() - 0.5) * 8,
+      size: 3 + Math.random() * 5,
+      life: 1,
+      color
+    });
+  }
+}
+
+// Physics and game logic
+function updateSpider() {
+  if (spider.swinging && spider.webAnchor) {
+    // Pendulum physics
+    const dx = spider.x - spider.webAnchor.x;
+    const dy = spider.y - spider.webAnchor.y;
+    spider.angle = Math.atan2(dx, dy);
+    
+    // Gravity torque
+    const gravity = 0.0015;
+    spider.angularVel += gravity * Math.sin(spider.angle);
+    
+    // Damping
+    spider.angularVel *= 0.998;
+    
+    // Update angle
+    spider.angle += spider.angularVel;
+    
+    // Update position
+    spider.x = spider.webAnchor.x + Math.sin(spider.angle) * spider.webLength;
+    spider.y = spider.webAnchor.y + Math.cos(spider.angle) * spider.webLength;
+    
+    // Forward momentum
+    spider.x += spider.vx * 0.1;
+  } else {
+    // Free fall with gravity
+    spider.vy += 0.3;
+    spider.x += spider.vx;
+    spider.y += spider.vy;
+    
+    // Air resistance
+    spider.vx *= 0.999;
+  }
+  
+  // Speed increase with level
+  spider.vx = Math.max(spider.vx, 2 + level * 0.5);
+  
+  // Invincibility timer
+  if (spider.invincible > 0) spider.invincible -= 0.016;
+  
+  // Bounds
+  if (spider.y > H - 30) {
+    spider.y = H - 30;
+    spider.vy = -spider.vy * 0.5;
+    loseLife();
+  }
+  if (spider.y < 0) {
+    spider.y = 0;
+    spider.vy = 0;
+  }
+  if (spider.x < 0) spider.x = 0;
+  if (spider.x > W) spider.x = W;
+  
+  // Check collectibles
+  collectibles.forEach(c => {
+    if (c.collected) return;
+    const dx = spider.x - c.x;
+    const dy = spider.y - c.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < spider.radius + c.radius) {
+      c.collected = true;
+      score += 10 * (1 + combo * 0.1);
+      combo++;
+      maxCombo = Math.max(maxCombo, combo);
+      spawnParticles(c.x, c.y, '#ffd700', 10);
+      showFloatingText(c.x, c.y, `+${Math.floor(10 * (1 + combo * 0.1))}`);
+      
+      // Level up every 50 points
+      const newLevel = Math.floor(score / 50) + 1;
+      if (newLevel > level) {
+        level = newLevel;
+        showFloatingText(W / 2, H / 2, `LEVEL ${level}!`);
+      }
+    }
+  });
+  
+  // Check obstacles
+  if (spider.invincible <= 0) {
+    obstacles.forEach(o => {
+      const dx = spider.x - o.x;
+      const dy = spider.y - o.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < spider.radius + o.radius) {
+        loseLife();
+        spawnParticles(o.x, o.y, '#ff4444', 15);
+      }
+    });
+  }
+  
+  // Building collision
+  buildings.forEach(b => {
+    const bx = b.x, by = H - b.h, bw = b.w, bh = b.h;
+    if (spider.x + spider.radius > bx && spider.x - spider.radius < bx + bw &&
+        spider.y + spider.radius > by && spider.y - spider.radius < by + bh) {
+      // Push out
+      const overlapLeft = spider.x + spider.radius - bx;
+      const overlapRight = bx + bw - (spider.x - spider.radius);
+      const overlapTop = spider.y + spider.radius - by;
+      const overlapBottom = by + bh - (spider.y - spider.radius);
+      
+      const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+      
+      if (minOverlap === overlapLeft) { spider.x = bx - spider.radius; spider.vx = Math.abs(spider.vx) * 0.5; }
+      else if (minOverlap === overlapRight) { spider.x = bx + bw + spider.radius; spider.vx = -Math.abs(spider.vx) * 0.5; }
+      else if (minOverlap === overlapTop) { spider.y = by - spider.radius; spider.vy = -Math.abs(spider.vy) * 0.5; }
+      else { spider.y = by + bh + spider.radius; spider.vy = Math.abs(spider.vy) * 0.5; }
+    }
+  });
+  
+  // Camera scroll (move everything left)
+  const scrollSpeed = spider.vx * 0.5;
+  buildings.forEach(b => b.x -= scrollSpeed);
+  collectibles.forEach(c => c.x -= scrollSpeed);
+  obstacles.forEach(o => o.x -= scrollSpeed);
+  clouds.forEach(c => c.x -= scrollSpeed * 0.3);
+  
+  // Remove off-screen objects and generate new ones
+  buildings = buildings.filter(b => b.x + b.w > -100);
+  collectibles = collectibles.filter(c => c.x > -50);
+  obstacles = obstacles.filter(o => o.x > -50);
+  
+  if (buildings.length < 5) generateBuildings();
+  if (collectibles.length < 3 || obstacles.length < 2) generateObjects();
+}
+
+function startSwing() {
+  if (spider.swinging) return;
+  
+  spider.swinging = true;
+  
+  // Find nearest building top as anchor point
+  let bestAnchor = null;
+  let bestDist = Infinity;
+  
+  buildings.forEach(b => {
+    const anchorX = b.x + b.w / 2;
+    const anchorY = H - b.h - 20;
+    const dx = anchorX - spider.x;
+    const dy = anchorY - spider.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist < bestDist && dist > 30 && anchorY < spider.y) {
+      bestDist = dist;
+      bestAnchor = { x: anchorX, y: anchorY };
+    }
+  });
+  
+  if (bestAnchor) {
+    spider.webAnchor = bestAnchor;
+    spider.webLength = bestDist;
+    spider.angle = Math.atan2(spider.x - bestAnchor.x, spider.y - bestAnchor.y);
+    spider.angularVel = spider.vx * 0.01;
+    
+    // Draw web
+    webs.push({
+      from: { x: spider.x, y: spider.y },
+      to: { ...bestAnchor },
+      life: 1
+    });
+  } else {
+    // No anchor found, just boost upward
+    spider.vy = -8;
+    spider.swinging = false;
+  }
+}
+
+function endSwing() {
+  if (!spider.swinging) return;
+  
+  spider.swinging = false;
+  
+  // Convert swing momentum to velocity
+  if (spider.webAnchor) {
+    const tangentX = Math.cos(spider.angle);
+    const tangentY = -Math.sin(spider.angle);
+    const speed = spider.angularVel * spider.webLength;
+    spider.vx = tangentX * speed + spider.vx * 0.5;
+    spider.vy = tangentY * speed;
+    
+    // Always push forward
+    spider.vx = Math.max(spider.vx, 3);
+  }
+  
+  spider.webAnchor = null;
+  
+  // Reset combo if touching ground
+  if (spider.y > H - 100) combo = 0;
+}
+
+function loseLife() {
+  if (spider.invincible > 0) return;
+  
+  lives--;
+  spider.invincible = 2;
+  combo = 0;
+  spawnParticles(spider.x, spider.y, '#ff0000', 20);
+  
+  if (lives <= 0) {
+    gameOver();
+  }
+}
+
+function gameOver() {
+  gameRunning = false;
+  
+  // Save best score
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('spiderman_best', bestScore.toString());
+  }
+  
+  document.getElementById('go-score').textContent = Math.floor(score);
+  document.getElementById('go-stats').innerHTML = `
+    Level reached: ${level}<br>
+    Best combo: ${maxCombo}x<br>
+    Distance: ${Math.floor(score / 10)}m
+  `;
+  document.getElementById('game-over').style.display = 'flex';
+  document.getElementById('exit-btn').style.display = 'none';
+}
+
+function showFloatingText(x, y, text) {
+  const div = document.createElement('div');
+  div.className = 'float-text';
+  div.textContent = text;
+  div.style.left = x + 'px';
+  div.style.top = y + 'px';
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 1000);
+}
+
+// Main game loop
+function gameLoop() {
+  if (!gameRunning) return;
+  
+  drawSky();
+  drawStars();
+  drawClouds();
+  drawBuildings();
+  drawCollectibles();
+  drawObstacles();
+  drawParticles();
+  drawSpider();
+  
+  updateSpider();
+  
+  // Update HUD
+  document.getElementById('hud-score').textContent = Math.floor(score);
+  document.getElementById('hud-level').textContent = `Level ${level}`;
+  document.getElementById('hud-best').textContent = Math.floor(bestScore);
+  
+  let hearts = '';
+  for (let i = 0; i < lives; i++) hearts += '❤️';
+  document.getElementById('hud-lives').textContent = hearts;
+  
+  // Combo display
+  const comboEl = document.getElementById('combo-display');
+  if (combo > 1) {
+    comboEl.textContent = `${combo}x Combo!`;
+    comboEl.classList.add('show');
+  } else {
+    comboEl.classList.remove('show');
+  }
+  
+  requestAnimationFrame(gameLoop);
+}
+
+// Event handlers
+canvas.addEventListener('mousedown', (e) => {
+  if (!gameRunning) return;
+  isMouseDown = true;
+  startSwing();
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  if (!gameRunning) return;
+  isMouseDown = false;
+  endSwing();
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  if (!gameRunning) return;
+  e.preventDefault();
+  isMouseDown = true;
+  startSwing();
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  if (!gameRunning) return;
+  e.preventDefault();
+  isMouseDown = false;
+  endSwing();
+}, { passive: false });
+
+// Start button
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('exit-btn').style.display = 'block';
+  initGame();
+  gameRunning = true;
+  gameLoop();
+});
+
+// Restart button
+document.getElementById('restart-btn').addEventListener('click', () => {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('exit-btn').style.display = 'block';
+  initGame();
+  gameRunning = true;
+  gameLoop();
+});
+
+// Exit button
+document.getElementById('exit-btn').addEventListener('click', () => {
+  gameRunning = false;
+  document.getElementById('start-screen').style.display = 'flex';
+  document.getElementById('hud').style.display = 'none';
+  document.getElementById('exit-btn').style.display = 'none';
+});
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && gameRunning) {
+    e.preventDefault();
+    startSwing();
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'Space' && gameRunning) {
+    e.preventDefault();
+    endSwing();
+  }
+});
+</script>
+</body>
+</html>
